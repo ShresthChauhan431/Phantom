@@ -41,7 +41,7 @@ _JSON_OBJECT_RE = re.compile(r"\{.*\}", re.DOTALL)
 
 
 def _clamp01(v: float) -> float:
-    return 0.0 if v < 0.0 else 1.0 if v > 1.0 else v
+    return min(max(v, 0.0), 1.0)
 
 
 def coerce_bbox(raw: Any) -> BBox | None:

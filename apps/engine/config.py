@@ -62,7 +62,7 @@ class Config:
     ollama_model: str = "qwen2.5-vl:latest"
     ollama_host: str = "http://localhost:11434"
     cloud_vlm_key: str = ""
-    cloud_model: str = "meta/llama-3.2-11b-vision-instruct"
+    cloud_model: str = "qwen/qwen3.8-27b"
     escalate_threshold: float = 0.7
 
     # Gate / debounce tuning
@@ -95,7 +95,7 @@ class Config:
             ollama_model=_get("OLLAMA_MODEL", "qwen2.5-vl:latest"),
             ollama_host=_get("OLLAMA_HOST", "http://localhost:11434"),
             cloud_vlm_key=_get("PHANTOM_CLOUD_VLM_KEY", ""),
-            cloud_model=_get("PHANTOM_CLOUD_MODEL", "meta/llama-3.2-11b-vision-instruct"),
+            cloud_model=_get("PHANTOM_CLOUD_MODEL", "qwen/qwen3.8-27b"),
             escalate_threshold=float(_get("PHANTOM_ESCALATE_THRESHOLD", "0.7")),
             motion_threshold=float(_get("PHANTOM_MOTION_THRESHOLD", "0.02")),
             settle_frames=int(_get("PHANTOM_SETTLE_FRAMES", "1")),
