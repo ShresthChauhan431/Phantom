@@ -45,6 +45,8 @@ class Config:
     camera_source: str = "replay"  # android | iphone | replay
     capture_interval: float = 2.0
     replay_dir: str = "tests/fixtures/frames"
+    camera_index: int = 0  # device index for iphone / usb webcam-bridge
+    camera_url: str = ""  # stream URL for android IP-webcam apps
 
     # Buffer / retention
     retention_hours: float = 168.0
@@ -78,6 +80,8 @@ class Config:
             camera_source=_get("PHANTOM_CAMERA_SOURCE", "replay"),
             capture_interval=float(_get("PHANTOM_CAPTURE_INTERVAL", "2")),
             replay_dir=_get("PHANTOM_REPLAY_DIR", "tests/fixtures/frames"),
+            camera_index=int(_get("PHANTOM_CAMERA_INDEX", "0")),
+            camera_url=_get("PHANTOM_CAMERA_URL", ""),
             retention_hours=float(_get("PHANTOM_RETENTION_HOURS", "168")),
             buffer_capacity=int(_get("PHANTOM_BUFFER_CAPACITY", "256")),
             vlm_provider=_get("PHANTOM_VLM_PROVIDER", "mock"),
