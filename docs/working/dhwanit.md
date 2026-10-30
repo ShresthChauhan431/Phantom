@@ -86,10 +86,9 @@ Co-owned (announce before editing): `apps/engine/main.py`, `pyproject.toml`, `Ma
       thread (writer), read-only API on the same store (`PHANTOM_DISABLE_LOOP=1` to serve only).
 
 ### M3 — Harden
-- [x] Real **Android** / **iPhone** capture implemented via `OpenCVCamera` (AVFoundation
-      index for iPhone Continuity Camera; stream URL or webcam-bridge index for Android).
-      `scripts/list_cameras.py` finds device indices; `scripts/setup_android.sh` covers routes.
-      **Pending on-device verification** (needs the physical phone + camera permission).
+- [x] Real **Android** / **iPhone** capture. iPhone works through the Swift/AVFoundation
+      bridge (see §E) — **verified end-to-end on live iPhone frames**. Android has two
+      routes in `capture/android.py` (IP-webcam stream URL, or a USB webcam-bridge index).
 - [x] Tune debounce + motion thresholds against real desk footage — **measured, no change
       warranted yet.** `scripts/check_camera.py` runs the real capture→gate→debounce path
       against a live camera, reports the noise floor and recommends a threshold. Findings:
@@ -188,22 +187,37 @@ into your branch at least every session and before every PR; new dependency → 
 
 # §E — Your spikes (timeboxed, resolve early)
 
-- **iPhone capture — RESOLVED (Continuity Camera ruled out).** Continuity Camera
-  requires the Mac and iPhone to be signed into the **same Apple ID**
-  ([Apple Support](https://support.apple.com/en-asia/guide/mac-help/mchl77879b8a/14.0/mac/14.0));
-  with different accounts there is no override, and a USB-C cable does not change it
-  (the cable grants data/trust, not the Continuity handshake). Verified on this machine:
-  macOS enumerated only `FaceTime HD Camera`. Two Apple-ID-free routes are implemented
-  in `capture/iphone.py` instead:
-  1. **Bridge app over USB (recommended)** — an app like [Camo](https://camo.com/camera)
-     presents the iPhone to macOS as a normal camera device; OpenCV opens it by index.
-     `python scripts/list_cameras.py` → `PHANTOM_CAMERA_INDEX=<index>`.
-  2. **Stream URL over Wi-Fi (no Mac-side driver)** — an RTSP/MJPEG camera app on the
-     phone publishes a URL OpenCV opens directly: `PHANTOM_CAMERA_URL=rtsp://…`.
-     Most robust for OpenCV since it skips virtual-camera enumeration entirely.
-  The real capture code path (`OpenCVCamera`, which `IPhoneCamera` subclasses) is
-  **verified against live hardware**: opened an AVFoundation device and pulled
-  sequential 1280x720 frames with advancing seq/timestamps.
+- **iPhone capture — RESOLVED via a Swift bridge.** Two separate blockers, both now
+  settled with evidence:
+  1. *Continuity Camera needs one Apple ID.* Apple requires the Mac and iPhone to be
+     signed into the **same** account
+     ([Apple Support](https://support.apple.com/en-asia/guide/mac-help/mchl77879b8a/14.0/mac/14.0));
+     a USB-C cable grants data/trust, not the Continuity handshake. Resolved by moving
+     to a Mac sharing the iPhone's Apple ID, where macOS lists the iPhone camera.
+  2. *OpenCV still cannot reach it.* Addressing a Continuity Camera requires the
+     `NSCameraUseContinuityCameraDeviceType` Info.plist opt-in, which a bare Python
+     interpreter cannot declare. Verified on hardware: OpenCV reported exactly two
+     devices (`out device of bound (0-1)`), but **every index served the built-in
+     camera** (confirmed by indicator light). Note macOS lists cameras in a different
+     order than OpenCV indexes them, so names cannot be zipped onto indices, and
+     indicator lights alone are unreliable — macOS wakes the Continuity Camera
+     whenever any capture session starts, lighting both cameras.
+
+  **Solution: `scripts/iphone_stream.swift` + `capture/iphone_bridge.py`.** Swift owns
+  the capture (AVFoundation reaches the iPhone without trouble — the iPhone displays
+  "MacBook is accessing the camera") and streams length-prefixed JPEGs over stdout;
+  `IPhoneBridgeCamera` decodes them behind the existing `Camera` protocol, so gate,
+  understand, and loop are untouched. The device is selected by AVFoundation
+  **uniqueID** and never falls back to a built-in camera, so the wrong camera cannot
+  be used silently. Default for `PHANTOM_CAMERA_SOURCE=iphone`; set
+  `PHANTOM_IPHONE_CAPTURE=index` for a webcam-bridge app (Camo) instead.
+  **Verified end-to-end on live iPhone frames:** 6 deltas committed, the record
+  carries `bbox` + history, and `GET /api/frame/{ref}` served a real 1920x1080 frame.
+
+  Diagnostics: `swift scripts/avf_devices.swift` (authoritative device list),
+  `python scripts/list_cameras.py --only N` (hold one index open), and
+  `python scripts/identify_iphone_index.py` (match an OpenCV index to the iPhone by
+  image fingerprint).
 - **Android USB → frames in Python (macOS).** Same two routes, in `capture/android.py`:
   an IP-webcam app's stream URL (`PHANTOM_CAMERA_URL`) or a USB webcam-bridge index
   (`PHANTOM_CAMERA_INDEX`). `scripts/setup_android.sh` covers the adb/scrcpy preflight.
