@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
+from threading import RLock
 
 from .base import Frame
 
@@ -27,7 +28,12 @@ def make_frame_ref(seq: int) -> str:
 
 
 class FrameBuffer:
-    """Fixed-size, time-bounded RAM store mapping ``frame_ref`` -> ``Frame``."""
+    """Fixed-size, time-bounded RAM store mapping ``frame_ref`` -> ``Frame``.
+
+    Thread-safe: the engine loop (writer) and the read API's frame-serving (reader)
+    run in different threads and both mutate the backing map (``put``/``get`` evict),
+    so all access is guarded by a re-entrant lock.
+    """
 
     def __init__(self, capacity: int = 256, retention_seconds: float = 300.0) -> None:
         if capacity <= 0:
@@ -35,27 +41,33 @@ class FrameBuffer:
         self.capacity = capacity
         self.retention = timedelta(seconds=retention_seconds)
         self._frames: OrderedDict[str, Frame] = OrderedDict()
+        self._lock = RLock()
 
     def put(self, frame: Frame) -> str:
         """Store ``frame`` and return its ``frame_ref`` handle."""
         ref = make_frame_ref(frame.seq)
-        self._frames[ref] = frame
-        self._frames.move_to_end(ref)
-        self._evict(now=frame.ts)
+        with self._lock:
+            self._frames[ref] = frame
+            self._frames.move_to_end(ref)
+            self._evict(now=frame.ts)
         return ref
 
     def get(self, frame_ref: str) -> Frame | None:
         """Resolve a handle to its frame, or ``None`` if evicted/unknown."""
-        self._evict()
-        return self._frames.get(frame_ref)
+        with self._lock:
+            self._evict()
+            return self._frames.get(frame_ref)
 
     def __len__(self) -> int:
-        return len(self._frames)
+        with self._lock:
+            return len(self._frames)
 
     def __contains__(self, frame_ref: object) -> bool:
-        return frame_ref in self._frames
+        with self._lock:
+            return frame_ref in self._frames
 
     def _evict(self, now: datetime | None = None) -> None:
+        # Caller holds self._lock.
         now = now or datetime.now(timezone.utc)
         # Capacity bound: drop oldest until within capacity.
         while len(self._frames) > self.capacity:

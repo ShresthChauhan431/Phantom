@@ -147,6 +147,17 @@ class EngineLoop:
         )
         self._last_heartbeat = time.monotonic()
 
+    # --------------------------------------------------------------- frame source
+    def get_frame_png(self, frame_ref: str) -> bytes | None:
+        """Resolve a transient ``frame_ref`` to PNG bytes from the RAM buffer.
+
+        This is the ``frame_source`` the read-only API uses to serve reveal frames
+        (``GET /api/frame/{frame_ref}``). Returns ``None`` once the frame has been
+        evicted past its retention window, so the API degrades to a 404.
+        """
+        frame = self.buffer.get(frame_ref)
+        return encode_frame(frame) if frame is not None else None
+
     # --------------------------------------------------------------- prior state
     def _prev_state_json(self) -> str:
         """Serialize current memory as the VLM's prior-state context."""
