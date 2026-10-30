@@ -7,9 +7,10 @@ committed. Re-run with ``python tests/fixtures/generate_frames.py`` to regenerat
 Staged scene (a desk, viewed top-down):
   000_empty         empty desk                      (baseline)
   001_empty         identical to 000                (static  -> no trigger)
-  002_bottle        a "bottle" appears on the desk  (change  -> trigger)
-  003_bottle        identical to 002                (static  -> no trigger)
-  004_bottle_moved  the bottle has moved            (change  -> trigger)
+  002_bottle        a "bottle" appears on the desk  (change  -> motion starts)
+  003_bottle        identical to 002                (settled -> promote end-state)
+  004_bottle_moved  the bottle has moved            (change  -> motion starts)
+  005_bottle_moved  identical to 004                (settled -> promote end-state)
 """
 
 from __future__ import annotations
@@ -53,6 +54,7 @@ def generate() -> list[Path]:
         "002_bottle": _with_bottle((320, 240)),
         "003_bottle": _with_bottle((320, 240)),
         "004_bottle_moved": _with_bottle((470, 300)),
+        "005_bottle_moved": _with_bottle((470, 300)),
     }
     written: list[Path] = []
     for name, img in scenes.items():
