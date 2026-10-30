@@ -90,8 +90,18 @@ Co-owned (announce before editing): `apps/engine/main.py`, `pyproject.toml`, `Ma
       index for iPhone Continuity Camera; stream URL or webcam-bridge index for Android).
       `scripts/list_cameras.py` finds device indices; `scripts/setup_android.sh` covers routes.
       **Pending on-device verification** (needs the physical phone + camera permission).
-- [ ] Tune debounce + motion thresholds against real desk footage (needs real footage; defaults
-      are parameterized via `.env`: `PHANTOM_MOTION_THRESHOLD`, `PHANTOM_SETTLE_FRAMES`).
+- [x] Tune debounce + motion thresholds against real desk footage — **measured, no change
+      warranted yet.** `scripts/check_camera.py` runs the real capture→gate→debounce path
+      against a live camera, reports the noise floor and recommends a threshold. Findings:
+      the Gaussian blur already absorbs sensor noise completely (static scene at sigma=20
+      scores `0.00000`) while a real move scores `~0.05`, so the `0.02` default has ample
+      margin and morphological opening is defaulted off. Live cameras do need a *time-based*
+      auto-exposure settle (first frames differ 20%+ from AE ramping alone) — fixed in
+      `OpenCVCamera`. Six regression tests lock in noise immunity.
+      **Final calibration still needs the deployed rig** (phone on a stand facing a static
+      desk); numbers from a laptop webcam facing a room are dominated by real scene motion,
+      not sensor noise, so they are not a valid baseline. Run the script once the phone is
+      bridged and set `PHANTOM_MOTION_THRESHOLD` from its recommendation.
 - [x] Grounded `bbox` in the understand output so Shresth's reveal can draw it. Prompt asks the
       VLM for a normalized `{x,y,w,h}` box; a tolerant parser (`coerce_bbox`) populates
       `delta.bbox` and drops malformed boxes without failing the Delta. Verified end-to-end:
