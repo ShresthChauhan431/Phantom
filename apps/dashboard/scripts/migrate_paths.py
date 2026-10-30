@@ -58,15 +58,14 @@ def rewrite_html(text: str) -> tuple[str, int]:
     def css_sub(m: re.Match) -> str:
         nonlocal n
         n += 1
-        return f'{m.group(1)}="/src/css/{m.group(2)}.css{m.group(3)}"'
+        query = m.group(3) or ""  # the version query is optional
+        return f'{m.group(1)}="/src/css/{m.group(2)}.css{query}"'
 
     text = re.sub(
         rf'(href)="({"|".join(map(re.escape, CSS))})\.css(\?[^"]*)?"',
-        lambda m: css_sub(m) if m.group(3) else css_sub(m),
+        css_sub,
         text,
     )
-    # the optional query group may be None; normalise those
-    text = text.replace(".cssNone", ".css")
 
     # Scripts: src="phantom-core.js?v=1" -> src="/src/js/core/phantom-core.js?v=1"
     def js_sub(m: re.Match) -> str:
