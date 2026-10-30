@@ -8,21 +8,36 @@ stylesheet and model sat in a single flat directory.
 
 ## Run it
 
-```bash
-# 1. the engine (separate terminal, from the repo root)
-make run                      # or: PHANTOM_DISABLE_LOOP=1 make run   (seeded data, no camera)
+One command starts both processes:
 
-# 2. the dashboard
-python3 apps/dashboard/serve.py        # http://localhost:5173
+```bash
+python3 scripts/run_all.py
 ```
 
-`serve.py` proxies `/api/*` to the engine on `localhost:8000`. That matters: the
-engine ships no CORS middleware, so a page served from another port could not call
-it directly. Proxying keeps every request same-origin and needs **no backend
-change**. Point it elsewhere with `--engine http://host:port`.
+It starts the engine, waits for it to answer, starts the dashboard, and prints the
+URLs. Ctrl-C stops both.
 
-The UI renders without the engine; API-backed panels simply report it as
-unreachable.
+```bash
+python3 scripts/run_all.py --camera replay --vlm mock   # no phone, no API key
+python3 scripts/run_all.py --no-loop                    # serve seeded memory only
+python3 scripts/run_all.py --check                      # start, verify, exit
+```
+
+Or run the two processes yourself:
+
+```bash
+make run                                # engine  :8000
+python3 apps/dashboard/serve.py         # dashboard :5173
+```
+
+**Do not serve this with Vite or another node dev server.** This is a static
+multi-page site with no build step. A dev server will not proxy `/api` (so every
+backend call returns HTML instead of JSON, silently) and may transform the CSS,
+which browsers then reject as a stylesheet. `serve.py` proxies `/api/*` to the
+engine, keeping requests same-origin so the engine needs no CORS configuration —
+point it elsewhere with `--engine http://host:port`.
+
+The UI renders without the engine; API-backed panels simply report it unreachable.
 
 ## Layout
 

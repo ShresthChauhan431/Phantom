@@ -94,12 +94,13 @@ def wait_for(url: str, timeout: float, label: str) -> bool:
         if shutting_down.is_set():
             return False
         try:
-            with urllib.request.urlopen(url, timeout=3) as response:  # noqa: S310
+            with urllib.request.urlopen(url, timeout=3) as response:
                 if response.status < 500:
                     return True
         except urllib.error.HTTPError:
             return True  # answering at all is enough
-        except Exception:  # noqa: BLE001 - not up yet
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError):
+            # Expected while the service is still binding its port — keep polling.
             pass
         # Surface an early crash instead of waiting out the whole timeout.
         for name, proc in processes:
