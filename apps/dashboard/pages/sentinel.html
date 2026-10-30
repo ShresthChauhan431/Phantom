@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F3F0EE">
+  <meta name="description" content="SENTINEL — Evidence Chain-of-Custody & Scene Forensics powered by PHANTOM.">
+  <title>SENTINEL — Evidence Chain-of-Custody & Spatial Forensics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/module-shared.css?v=2.0.0">
+  <style>
+    :root {
+      --module-accent: #DC2626;
+      --module-accent-light: #F87171;
+      --module-accent-rgb: 220, 38, 38;
+    }
+  </style>
+</head>
+<body data-module="sentinel">
+  <!-- Top Floating Pill Header (SMRITI Benchmark) -->
+  <header class="module-site-header">
+    <div class="module-header-inner">
+      <div class="module-header-left">
+        <a href="/pages/phantom.html" class="module-brand">
+          <span>PHANTOM</span>
+          <span class="module-brand-sep">/</span>
+          <span class="module-brand-name">SENTINEL</span>
+        </a>
+        <span class="module-domain-badge">06 · FORENSICS</span>
+      </div>
+
+      <div class="module-header-center">
+        <nav class="module-nav-pills" aria-label="Ecosystem Switcher">
+          <a href="/pages/smriti.html" class="module-nav-link">01 SMRITI</a>
+          <a href="/pages/lumen.html" class="module-nav-link">02 LUMEN</a>
+          <a href="/pages/aegis.html" class="module-nav-link">03 AEGIS</a>
+          <a href="/pages/forge.html" class="module-nav-link">04 FORGE</a>
+          <a href="/pages/meridian.html" class="module-nav-link">05 MERIDIAN</a>
+          <a href="/pages/sentinel.html" class="module-nav-link is-active">06 SENTINEL</a>
+          <a href="/pages/sense.html" class="module-nav-link">07 SENSE</a>
+        </nav>
+      </div>
+
+      <div class="module-header-right">
+        <a href="/pages/workspace.html" class="btn-nav-primary">
+          <span>Launch Workspace →</span>
+        </a>
+        <a href="/pages/phantom.html#sentinel" class="btn-nav-outline">
+          <span>← Architecture</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="module-main-wrap">
+    <!-- Hero Block -->
+    <section class="module-hero-block">
+      <div class="module-tagline-eyebrow">
+        <span class="dot"></span>
+        <span>EVIDENCE FORENSICS & INTEGRITY · MODULE 06</span>
+      </div>
+      <h1 class="module-headline">
+        An unbroken chain<br><em>of physical custody.</em>
+      </h1>
+      <p class="module-lead">
+        SENTINEL delivers verifiable, court-admissible spatial custody records for law enforcement evidence lockers, forensic laboratories, and incident reconstruction sites. It logs item deposits, physical transfers, and spatial displacements with cryptographic timestamps.
+      </p>
+      <div class="module-cta-row">
+        <a href="#evidenceLockerSection" class="btn-nav-primary">
+          <span>Inspect Evidence Custody ↓</span>
+        </a>
+        <a href="#legalSection" class="btn-nav-outline">
+          <span>Legal Admissibility Framework</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Chapter 01: Evidence Locker Custody -->
+    <section class="module-chapter" id="evidenceLockerSection">
+      <div class="chapter-index">
+        <span class="num">01</span>
+        <span>CENTRAL EVIDENCE VAULT · TAMPER-EVIDENT PHYSICAL LEDGER</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Cryptographic chain-of-custody<br><em>inside secure lockers.</em></h2>
+        <p class="chapter-desc">
+          High-integrity locker cameras record evidence deposits, bag seals, and officer transfers. Every spatial transition is stamped with a local cryptographic hash for courtroom admissibility.
+        </p>
+      </div>
+
+      <table class="custody-ledger-table">
+        <thead>
+          <tr>
+            <th>Evidence Item ID</th>
+            <th>Locker Assignment</th>
+            <th>Custody Officer</th>
+            <th>Observation Hash</th>
+            <th>Physical Seal State</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>2026-EX-0091</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Ballistic Casing 9mm Luger · Sealed Evidence Bag</span></td>
+            <td>Locker Bay 08-B</td>
+            <td>Det. K. Vance (#4902)</td>
+            <td><code style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);">sha256:9a38f4d...</code></td>
+            <td><span class="tamper-seal-badge">Tamper Seal Intact</span></td>
+          </tr>
+          <tr>
+            <td><strong>2026-EX-0092</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Encrypted NVMe SSD · Anti-Static Enclosure</span></td>
+            <td>Locker Bay 08-C</td>
+            <td>Agent M. Torres (#1108)</td>
+            <td><code style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);">sha256:b44218e...</code></td>
+            <td><span class="tamper-seal-badge">Tamper Seal Intact</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Chapter 02: Scene Reconstruction Spatial Diff -->
+    <section class="module-chapter">
+      <div class="chapter-index">
+        <span class="num">02</span>
+        <span>INCIDENT SCENE · SPATIAL RELATIONSHIP DISPLACEMENT DIFF</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Micro-displacement tracking<br><em>without marker tags.</em></h2>
+        <p class="chapter-desc">
+          Compares initial baseline scene observations against post-disturbance frames, highlighting moved artifacts, disturbed surfaces, and point-of-origin vectors.
+        </p>
+      </div>
+
+      <div style="background: var(--lifted-cream); border: 1px solid var(--line-border); border-radius: var(--radius-lg); padding: 32px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <div>
+            <h3 style="font-family: var(--font-display); font-size: 24px; margin: 0 0 4px;">Scene Sector Bravo</h3>
+            <p style="font-size: 13px; color: var(--slate-gray); margin: 0;">Verified Displacements: 2 Items Altered Post-Baseline</p>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: #dc2626; font-weight: 600;">COMMITTED DIFF</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="background: var(--pure-white); border: 1px solid var(--line-border); border-radius: var(--radius-md); padding: 18px;">
+            <div style="font-weight: 600; font-size: 14.5px;">Office Desk Chair</div>
+            <div style="font-size: 13px; color: var(--charcoal); margin: 4px 0 8px;">Displacement Delta: 1.42m South-West from Desk</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);">Observation Ref: obs_9102 · Verified</div>
+          </div>
+          <div style="background: var(--pure-white); border: 1px solid var(--line-border); border-radius: var(--radius-md); padding: 18px;">
+            <div style="font-weight: 600; font-size: 14.5px;">Telephone Handset</div>
+            <div style="font-size: 13px; color: var(--charcoal); margin: 4px 0 8px;">Displacement Delta: Off Cradle · Position: Floor</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);">Observation Ref: obs_9103 · Verified</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 03: Legal Integrity & Ethics -->
+    <section class="module-chapter" id="legalSection">
+      <div class="chapter-index">
+        <span class="num">03</span>
+        <span>LEGAL BOUNDARY & PRIVACY DISCLOSURE</span>
+      </div>
+      <div style="background: var(--lifted-cream); border: 1px solid var(--line-border); border-radius: var(--radius-lg); padding: 32px; max-width: 820px;">
+        <h3 style="font-family: var(--font-display); font-size: 26px; margin: 0 0 12px; color: var(--ink-black);">
+          Non-surveillance disclosure.
+        </h3>
+        <p style="font-size: 14.5px; line-height: 1.6; color: var(--charcoal); margin: 0 0 16px;">
+          SENTINEL is engineered exclusively for tracking inanimate physical evidence and forensic scenes. It does not perform facial recognition, does not track personal biometric identities, and does not conduct mass surveillance.
+        </p>
+        <div style="font-family: var(--font-mono); font-size: 11.5px; color: var(--slate-gray);">
+          LOCAL-FIRST FORENSIC IMMUTABILITY · ZERO BIOMETRIC INDEXING
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/src/api/inspector.js"></script>
+</body>
+</html>

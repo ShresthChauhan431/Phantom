@@ -450,13 +450,14 @@
   }
 
   .receipt-layout {
-    grid-template-columns: 1fr;
-    gap: 48px;
-    margin-top: 48px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+    margin-top: 40px;
   }
 
   .receipt-intro {
     max-width: 100%;
+    min-width: 0;
   }
 
   .receipt-lead {
@@ -467,11 +468,14 @@
     flex-direction: column;
     align-items: center;
     gap: 28px;
+    width: 100%;
   }
 
   .memory-receipt-paper {
     flex: auto;
     max-width: 100%;
+    width: 100%;
+    min-width: 0;
   }
 
   .receipt-3d-companion {
@@ -493,28 +497,91 @@
   }
 
   .receipt-intro h2 {
-    font-size: clamp(38px, 11vw, 52px);
+    font-size: clamp(28px, 7.5vw, 44px);
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+
+  .receipt-lead {
+    font-size: clamp(14px, 3.5vw, 16px);
+    max-width: 100%;
+  }
+
+  .receipt-narrative-box {
+    padding: 14px 16px;
+    width: 100%;
+  }
+
+  .narrative-headline {
+    font-size: clamp(17px, 4.2vw, 20px);
+    overflow-wrap: break-word;
   }
 
   .memory-receipt-paper {
-    padding: 24px 20px;
+    padding: clamp(18px, 4vw, 24px) clamp(14px, 3.5vw, 20px);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .item-name {
-    font-size: 28px;
+    font-size: clamp(24px, 6vw, 30px);
+    overflow-wrap: break-word;
+  }
+
+  .receipt-route-grid {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 8px;
   }
 
   .step-location {
-    font-size: 17px;
+    font-size: clamp(15px, 3.8vw, 18px);
+    overflow-wrap: break-word;
+  }
+
+  .evidence-row {
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: space-between;
+  }
+
+  .evidence-row span:first-child {
+    font-size: 9px;
+  }
+
+  .receipt-status-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .receipt-engine-tag {
+    font-size: 8.5px;
   }
 
   .receipt-3d-companion {
-    width: 200px;
+    width: min(200px, 65vw);
+    margin-top: 12px;
   }
 
   .companion-canvas-wrap {
-    width: 200px;
-    height: 150px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@media (max-width: 360px) {
+  .memory-receipt-paper {
+    padding: 16px 12px;
+  }
+  .receipt-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .receipt-meta {
+    align-items: flex-start;
   }
 }
 

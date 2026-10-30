@@ -6,9 +6,9 @@
 
 .chapter-trust-manifesto {
   position: relative;
-  background: #141210;
-  color: #FAF4EC;
-  border-top: 1px solid rgba(255, 255, 255, .08);
+  background: var(--canvas-cream, #F3F0EE);
+  color: var(--ink-black, #141413);
+  border-top: 1px solid var(--line, rgba(20, 20, 19, .08));
   padding-block: var(--section-pad-y);
   padding-inline: 0;
   overflow: hidden;
@@ -22,9 +22,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 85% 40%, rgba(77, 157, 145, .05) 0%, transparent 60%),
-    radial-gradient(ellipse at 15% 65%, rgba(201, 95, 61, .04) 0%, transparent 55%),
-    radial-gradient(circle at 50% 50%, #161412 0%, #100F0D 100%);
+    radial-gradient(ellipse at 85% 40%, rgba(77, 157, 145, .04) 0%, transparent 60%),
+    radial-gradient(ellipse at 15% 65%, rgba(201, 95, 61, .03) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
 }
@@ -52,8 +51,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, .018) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, .018) 1px, transparent 1px);
+    linear-gradient(to right, rgba(20, 20, 19, .02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(20, 20, 19, .02) 1px, transparent 1px);
   background-size: 54px 54px;
   mask-image: radial-gradient(ellipse at 65% 50%, black 15%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse at 65% 50%, black 15%, transparent 70%);
@@ -76,7 +75,7 @@
 .trust-connector-line {
   width: 1px;
   height: 54px;
-  background: linear-gradient(180deg, rgba(201, 95, 61, .45) 0%, rgba(250, 244, 236, .12) 100%);
+  background: linear-gradient(180deg, rgba(201, 95, 61, .45) 0%, rgba(20, 20, 19, .08) 100%);
 }
 
 .trust-connector-node {
@@ -85,7 +84,7 @@
   letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--clay, #C95F3D);
-  background: #141210;
+  background: var(--lifted-cream, #FCFBFA);
   padding: 2px 8px;
   border: 1px solid rgba(201, 95, 61, .32);
   border-radius: 10px;
@@ -97,8 +96,8 @@
   z-index: 1;
   width: 100%;
   margin: 0;
-  color: rgba(250, 244, 236, .45);
-  border-bottom-color: rgba(255, 255, 255, .10);
+  color: var(--slate-gray, #696969);
+  border-bottom-color: var(--line, rgba(20, 20, 19, .08));
 }
 
 .chapter-trust-manifesto .chapter-index span:last-child {
@@ -141,7 +140,7 @@
   font-weight: 400;
   line-height: var(--text-h1-lh);
   letter-spacing: var(--text-h1-ls);
-  color: rgba(250, 244, 236, 0.95);
+  color: var(--ink-black, #141413);
   max-width: 22ch;
   position: relative;
   z-index: 2;
@@ -168,7 +167,7 @@
   font-size: var(--text-lead-size);
   line-height: var(--text-lead-lh);
   font-weight: 400;
-  color: #D6CFBE;
+  color: var(--slate-gray, #696969);
   max-width: 500px;
 }
 
@@ -176,7 +175,7 @@
 .trust-principles-list {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid rgba(255, 255, 255, .10);
+  border-top: 1px solid var(--line, rgba(20, 20, 19, .08));
   width: 100%;
 }
 
@@ -185,7 +184,7 @@
   flex-direction: column;
   gap: 10px;
   padding: clamp(24px, 3vw, 32px) 0;
-  border-bottom: 1px solid rgba(255, 255, 255, .10);
+  border-bottom: 1px solid var(--line, rgba(20, 20, 19, .08));
 }
 
 .principle-kicker {
@@ -204,7 +203,7 @@
   font-weight: 500;
   line-height: var(--text-h3-lh);
   letter-spacing: var(--text-h3-ls);
-  color: #FAF4EC;
+  color: var(--ink-black, #141413);
   max-width: 480px;
 }
 
@@ -237,14 +236,21 @@
 
 @media (max-width: 960px) {
   .trust-editorial-layout {
-    grid-template-columns: 1fr;
-    gap: 44px;
-    margin-top: 48px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .trust-main-col {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .trust-supporting-col {
     padding-top: 0;
-    gap: 32px;
+    gap: 28px;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .trust-supporting-lead {
@@ -262,21 +268,35 @@
     padding-inline: 0;
   }
 
-  .trust-headline {
-    font-size: clamp(36px, 10vw, 48px);
+  .trust-headline,
+  .chapter-trust-manifesto h2.trust-headline {
+    font-size: clamp(26px, 7.5vw, 40px);
+    line-height: 1.12;
+    overflow-wrap: break-word;
+    max-width: 100%;
   }
 
   .trust-supporting-lead {
-    font-size: 15px;
-    line-height: 1.58;
+    font-size: clamp(14px, 3.6vw, 16px);
+    line-height: 1.55;
+    max-width: 100%;
   }
 
   .principle-statement {
-    font-size: 20px;
+    font-size: clamp(16px, 4vw, 20px);
+    line-height: 1.35;
+    overflow-wrap: break-word;
   }
 
   .trust-principle-entry {
-    padding: 22px 0;
+    padding: 18px 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .trust-headline,
+  .chapter-trust-manifesto h2.trust-headline {
+    font-size: clamp(23px, 7vw, 26px);
   }
 }
 

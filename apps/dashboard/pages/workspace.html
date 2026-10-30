@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F3F0EE">
+  <meta name="description" content="PHANTOM Table Workspace — Local-First Spatial Intelligence & Physical Memory Monitor.">
+  <title>PHANTOM — Table Workspace & Spatial Memory Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/workspace.css?v=2.0.0">
+</head>
+<body>
+  <!-- Top Floating Pill Header (SMRITI Benchmark) -->
+  <header class="workspace-header-pill">
+    <div class="workspace-header-inner">
+      <div class="workspace-header-left">
+        <a href="/pages/phantom.html" class="wordmark" aria-label="PHANTOM Architecture Home">
+          <span>PHANTOM</span><span class="wordmark-period">.</span>
+        </a>
+        <span class="workspace-badge">TABLE WORKSPACE</span>
+        <div class="env-select-wrap">
+          <select id="envSelect" class="env-select" aria-label="Monitored Environment Selector">
+            <option value="env_desk_01" selected>My Desk (Primary Active)</option>
+            <option value="env_table_02">Table Test Area</option>
+          </select>
+          <span class="env-select-arrow" aria-hidden="true">▼</span>
+        </div>
+      </div>
+
+      <div class="workspace-header-center">
+        <div class="hud-status-pill" id="hudPill">
+          <span class="hud-dot" id="hudDot"></span>
+          <span id="hudText">STANDBY</span>
+        </div>
+      </div>
+
+      <div class="workspace-header-right">
+        <button class="btn-pill-primary" type="button" id="btnHeaderAction">
+          <span>● Start Monitoring</span>
+        </button>
+        <a href="/pages/phantom.html" class="btn-pill-quiet" id="btnReturnToArch">
+          <span>← Architecture</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Segmented Sub-Nav Bar -->
+  <div class="workspace-nav-outer">
+    <div class="workspace-nav-container">
+      <nav class="workspace-tabs-bar" aria-label="Workspace Views">
+        <button class="tab-btn is-active" type="button" data-tab="overview">
+          <span class="tab-num">01</span>
+          <span>Overview</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="monitor">
+          <span class="tab-num">02</span>
+          <span>Live Monitor</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="objects">
+          <span class="tab-num">03</span>
+          <span>Objects</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="activity">
+          <span class="tab-num">04</span>
+          <span>Activity</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="search">
+          <span class="tab-num">05</span>
+          <span>Search & Reveal</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="environments">
+          <span class="tab-num">06</span>
+          <span>Environments</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="settings">
+          <span class="tab-num">07</span>
+          <span>Settings</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Workspace Container -->
+  <main class="workspace-content">
+    <!-- ====================================================================
+         VIEW 1: OVERVIEW (EDITORIAL SPLIT COMPOSITION)
+         ==================================================================== -->
+    <section class="workspace-view is-active" data-view="overview" id="viewOverview">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow">
+          <span class="dot"></span>
+          <span>SPATIAL MEMORY ENGINE · CONTINUOUS LOCAL REGISTRY</span>
+        </div>
+        <h1 class="view-title">Your desk <em>remembers.</em></h1>
+        <p class="view-subtitle">
+          PHANTOM maintains a structured key-value index of physical objects, resolving their positions relative to stationary desk anchors without tags, barcodes, or cloud streaming.
+        </p>
+      </header>
+
+      <div class="overview-ledger-split">
+        <!-- Left Column: The Monitored Physical Space -->
+        <div class="desk-state-panel">
+          <div class="desk-state-header">
+            <div class="panel-title-wrap">
+              <h2>Monitored Physical Space</h2>
+              <p id="envSummarySubtitle">Fixed Desk Workspace · My Desk (Primary Active)</p>
+            </div>
+            <button class="btn-pill-quiet" type="button" id="btnLaunchMonitorQuick" style="font-size: 12.5px; border: 1px solid var(--line-border);">
+              <span>Live View →</span>
+            </button>
+          </div>
+
+          <div class="desk-anchors-row">
+            <div class="anchors-title">Stationary Reference Anchors</div>
+            <div class="anchors-pills">
+              <span class="anchor-chip"><span class="anchor-dot"></span>MacBook Pro 16" (Center)</span>
+              <span class="anchor-chip"><span class="anchor-dot"></span>Studio Display (Rear)</span>
+              <span class="anchor-chip"><span class="anchor-dot"></span>Desk Left Boundary</span>
+            </div>
+          </div>
+
+          <div class="anchors-title">Active Physical Items</div>
+          <div class="desk-snapshot-list" id="deskSnapshotList">
+            <!-- Dynamically populated from IndexedDB -->
+          </div>
+
+          <div class="desk-state-actions">
+            <button class="btn-pill-primary" type="button" id="btnStartMonitoring">
+              <span id="btnStartMonitoringLabel">Start Monitoring</span>
+            </button>
+            <span style="font-size: 13px; color: var(--slate-gray);" id="overviewCameraStatusText">
+              Camera: FaceTime HD (Local WebRTC)
+            </span>
+          </div>
+        </div>
+
+        <!-- Right Column: Recent Verified Movements -->
+        <div class="movement-stream-panel">
+          <div class="stream-panel-header">
+            <div class="panel-title-wrap">
+              <h2>Recent Verified Movements</h2>
+              <p>State changes committed after settling</p>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--signal-orange);" id="statsRecentChangesBadge">6 EVENTS</span>
+          </div>
+
+          <ul class="recent-events-list" id="recentEventsOverview">
+            <!-- Dynamically populated from IndexedDB events -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- Quick Search Ribbon -->
+      <div class="overview-search-ribbon">
+        <div class="overview-search-input-wrap">
+          <input type="text" id="quickSearchInput" class="overview-search-input" placeholder="Quick query: e.g. &quot;Where are my glasses?&quot; or &quot;When did the keys move?&quot;"/>
+        </div>
+        <button class="btn-pill-primary" type="button" id="btnQuickSearchTrigger">
+          <span>Search Memory →</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 2: LIVE MONITOR (STUDIO-GRADE VIEWFINDER)
+         ==================================================================== -->
+    <section class="workspace-view" data-view="monitor" id="viewMonitor">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow">
+          <span class="dot"></span>
+          <span>STAGE 1 PIXEL DIFFERENCING · STAGE 2 NEURAL PROMOTION</span>
+        </div>
+        <h1 class="view-title">Live table <em>observation.</em></h1>
+        <p class="view-subtitle">
+          The camera stream is evaluated through a low-cost motion gate. When physical movement ceases, the scene settles for 1.5 seconds before capturing a verified candidate frame.
+        </p>
+      </header>
+
+      <div class="live-monitor-stage-layout">
+        <!-- Main Viewfinder Stage -->
+        <div class="viewfinder-card">
+          <div class="viewfinder-chrome-top">
+            <div class="viewfinder-chrome-left">
+              <span class="viewfinder-indicator"></span>
+              <span>PHANTOM REALITY EYE · TABLE OBSERVATION</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 11px;">
+              <span id="runtimeModelBadge">COCO-SSD · LOCAL WEBGL/WASM</span>
+            </div>
+          </div>
+
+          <div class="viewfinder-screen">
+            <video id="cameraVideo" autoplay playsinline muted></video>
+            <canvas id="overlayCanvas"></canvas>
+
+            <!-- Studio Reticles -->
+            <div class="viewfinder-reticle reticle-tl" aria-hidden="true"></div>
+            <div class="viewfinder-reticle reticle-tr" aria-hidden="true"></div>
+            <div class="viewfinder-reticle reticle-bl" aria-hidden="true"></div>
+            <div class="viewfinder-reticle reticle-br" aria-hidden="true"></div>
+
+            <div class="viewfinder-hud-overlay">
+              <div class="viewfinder-hud-pill">
+                <span id="cameraResolutionHud">1280 × 720 HD</span>
+              </div>
+              <div class="viewfinder-motion-meter">
+                <span style="font-weight: 600;">MOTION:</span>
+                <div class="motion-meter-track">
+                  <div class="motion-meter-bar-fill" id="motionMeterFill"></div>
+                </div>
+                <span id="motionMeterText">CALM · 0.0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="viewfinder-controls-bottom">
+            <div class="controls-group">
+              <select id="cameraSourceSelect" class="vf-select" aria-label="Select Camera Hardware">
+                <option value="">Detecting cameras...</option>
+              </select>
+              <select id="resolutionSelect" class="vf-select" aria-label="Capture Resolution">
+                <option value="1280x720" selected>720p HD</option>
+                <option value="1920x1080">1080p FHD</option>
+                <option value="640x480">480p SD</option>
+              </select>
+            </div>
+
+            <div class="controls-group">
+              <button class="btn-vf-tool" type="button" id="btnCaptureNow">
+                <span>✦ Capture & Verify</span>
+              </button>
+              <button class="btn-vf-tool is-active" type="button" id="btnToggleBoxes">
+                <span>Bounding Boxes</span>
+              </button>
+              <button class="btn-vf-tool" type="button" id="btnUploadFallback">
+                <span>Upload Test Video</span>
+              </button>
+              <input type="file" id="fileUploadInput" accept="video/*,image/*" style="display: none;"/>
+            </div>
+
+            <div class="controls-group" style="font-family: var(--font-mono); font-size: 12px; color: #a1a1aa;">
+              <span>Interval:</span>
+              <input type="range" id="intervalSlider" min="1" max="10" step="1" value="3" style="width: 70px; accent-color: var(--signal-orange);"/>
+              <span id="intervalVal" style="color: #fff; font-weight: 600;">3s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar: Detected Scene Matrix -->
+        <aside class="monitor-sidebar-stack">
+          <div class="monitor-panel">
+            <div class="monitor-panel-header">
+              <h2 class="monitor-panel-title">Detected Scene Matrix</h2>
+              <span style="font-family: var(--font-mono); font-size: 10.5px; color: var(--signal-orange);">VERIFIED</span>
+            </div>
+            <div class="matrix-list" id="activeDetectionsList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <div class="monitor-panel">
+            <div class="monitor-panel-header">
+              <h2 class="monitor-panel-title">Spatial Calibration</h2>
+            </div>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--charcoal);">
+              <div style="margin-bottom: 6px;"><strong>Primary Anchor:</strong> MacBook Pro (Center [0.50, 0.50])</div>
+              <div style="margin-bottom: 6px;"><strong>Euclidean Drift Gate:</strong> &gt; 9% centroid shift triggers state change.</div>
+              <div><strong>Settling Delay:</strong> 1.5 seconds post-motion stability.</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 3: OBJECTS (PRECISION EDITORIAL REGISTRY TABLE — NO CARD GRIDS)
+         ==================================================================== -->
+    <section class="workspace-view" data-view="objects" id="viewObjects">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow">
+          <span class="dot"></span>
+          <span>CONTINUOUS PHYSICAL KEY-VALUE INDEX</span>
+        </div>
+        <h1 class="view-title">Tracked everyday <em>objects.</em></h1>
+        <p class="view-subtitle">
+          Every physical object is indexed by visual identity, centroid coordinates, and relative relationship to stationary landmarks. Select any item to inspect its complete verified movement history.
+        </p>
+      </header>
+
+      <div class="objects-toolbar-row">
+        <div class="category-filter-chips">
+          <button class="filter-chip is-active" type="button" data-category="all">All Objects</button>
+          <button class="filter-chip" type="button" data-category="personal">Personal Items</button>
+          <button class="filter-chip" type="button" data-category="electronics">Electronics & Anchors</button>
+          <button class="filter-chip" type="button" data-category="hydration">Hydration & Cups</button>
+          <button class="filter-chip" type="button" data-category="stationery">Stationery & Notes</button>
+        </div>
+        <span style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);" id="objectsRegistryCount">7 ITEMS INDEXED</span>
+      </div>
+
+      <!-- Precision Registry Table -->
+      <div class="objects-registry-table">
+        <div class="registry-table-header">
+          <span>Physical Object</span>
+          <span>Relative Location / Landmark Anchor</span>
+          <span>Last Observed</span>
+          <span>Model Confidence</span>
+          <span style="text-align: right;">Action</span>
+        </div>
+        <div class="registry-table-rows" id="objectsRegistryRows">
+          <!-- Dynamically populated from IndexedDB -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 4: ACTIVITY (CHRONOLOGICAL EVENT LEDGER)
+         ==================================================================== -->
+    <section class="workspace-view" data-view="activity" id="viewActivity">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow">
+          <span class="dot"></span>
+          <span>IMMUTABLE PHYSICAL STATE LEDGER</span>
+        </div>
+        <h1 class="view-title">Chronological physical <em>activity.</em></h1>
+        <p class="view-subtitle">
+          Physical movement events are recorded only when a confirmed state transition occurs after scene settling. Unchanged observations are discarded to preserve privacy and minimize noise.
+        </p>
+      </header>
+
+      <div class="activity-ledger-wrap">
+        <div class="activity-filter-bar">
+          <div class="category-filter-chips">
+            <button class="filter-chip is-active" type="button" data-event="all">All Events</button>
+            <button class="filter-chip" type="button" data-event="moved">Moved</button>
+            <button class="filter-chip" type="button" data-event="added">Added</button>
+            <button class="filter-chip" type="button" data-event="removed">Removed</button>
+            <button class="filter-chip" type="button" data-event="occluded">Occluded</button>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);">LOCAL-FIRST INDEXEDDB RECORD</span>
+        </div>
+
+        <ul class="timeline-chronological-list" id="timelineList">
+          <!-- Dynamically populated from IndexedDB -->
+        </ul>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 5: SEARCH & EVIDENCE REVEAL
+         ==================================================================== -->
+    <section class="workspace-view" data-view="search" id="viewSearch">
+      <header class="view-editorial-header" style="text-align: center; max-width: 680px; margin: 0 auto 36px;">
+        <div class="view-eyebrow" style="justify-content: center;">
+          <span class="dot"></span>
+          <span>DETERMINISTIC SPATIAL QUERY</span>
+        </div>
+        <h1 class="view-title">Search physical <em>memory.</em></h1>
+        <p class="view-subtitle" style="margin: 0 auto;">
+          Ask where an item is located, when it moved, or what was beside a reference anchor. Answers are drawn directly from the verified spatial key-value store.
+        </p>
+      </header>
+
+      <div class="search-center-stage">
+        <div class="search-field-shell">
+          <input type="text" id="searchInput" class="search-field-input" placeholder="Ask e.g. &quot;Where are my glasses?&quot; or &quot;When did the keys move?&quot;"/>
+          <button class="btn-search-go" type="button" id="btnSearch" aria-label="Search">
+            <span>→</span>
+          </button>
+        </div>
+
+        <div class="search-suggestions-row">
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);">SUGGESTIONS:</span>
+          <button class="suggestion-chip" type="button">Where are my glasses?</button>
+          <button class="suggestion-chip" type="button">Where was the water bottle last seen?</button>
+          <button class="suggestion-chip" type="button">When did the keys move?</button>
+          <button class="suggestion-chip" type="button">What was beside the laptop earlier?</button>
+          <button class="suggestion-chip" type="button">Which objects moved today?</button>
+        </div>
+
+        <!-- Evidence-Led Result Container -->
+        <div id="searchResultContainer">
+          <!-- Dynamically populated on search -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 6: ENVIRONMENTS
+         ==================================================================== -->
+    <section class="workspace-view" data-view="environments" id="viewEnvironments">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow">
+          <span class="dot"></span>
+          <span>PHYSICAL DOMAIN PARTITIONING</span>
+        </div>
+        <h1 class="view-title">Monitored <em>environments.</em></h1>
+        <p class="view-subtitle">
+          Configure discrete physical spaces. Each space maintains its own independent key-value registry, spatial reference anchors, and event ledger.
+        </p>
+      </header>
+
+      <div class="settings-section-card">
+        <div class="settings-card-header">
+          <h2>My Desk (Primary Active)</h2>
+          <p>Fixed desk workspace monitored by FaceTime HD / phone camera. Contains 7 tracked assets.</p>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Stationary Landmark Anchor</strong>
+            <p>Primary stationary object used for spatial relative coordinates</p>
+          </div>
+          <span class="anchor-chip"><span class="anchor-dot"></span>MacBook Pro 16" (Center)</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Calibration State</strong>
+            <p>Camera viewpoint and coordinate grid alignment</p>
+          </div>
+          <span style="color: var(--accent-green); font-weight: 600; font-size: 13px;">● Calibrated & Monitoring Ready</span>
+        </div>
+      </div>
+
+      <div class="settings-section-card">
+        <div class="settings-card-header">
+          <h2>Table Test Area</h2>
+          <p>Secondary demonstration surface for testing mobile camera handoffs and offline recordings.</p>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Stationary Landmark Anchor</strong>
+            <p>Center work surface anchor</p>
+          </div>
+          <span class="anchor-chip"><span class="anchor-dot"></span>Center Worksurface</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Status</strong>
+            <p>Observation readiness</p>
+          </div>
+          <span style="color: var(--slate-gray); font-size: 13px;">Standby</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         VIEW 7: SETTINGS & PRIVACY
+         ==================================================================== -->
+    <section class="workspace-view" data-view="settings" id="viewSettings">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow">
+          <span class="dot"></span>
+          <span>ENGINE CONFIGURATION & PRIVACY DISCLOSURE</span>
+        </div>
+        <h1 class="view-title">Engine <em>settings.</em></h1>
+        <p class="view-subtitle">
+          Full technical transparency regarding inference execution location, motion gate sensitivity, and client-side data retention.
+        </p>
+      </header>
+
+      <div class="settings-section-card">
+        <div class="settings-card-header">
+          <h2>Vision Model & Inference Execution</h2>
+          <p>Strict transparency regarding model runtime and network isolation.</p>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Inference Runtime</strong>
+            <p>Object detection executes locally inside browser WebGL / WebAssembly runtime.</p>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--ink-black);">TensorFlow.js Coco-SSD (100% Client-Side)</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Cloud Video Streaming</strong>
+            <p>No video feeds, audio, or raw camera frames are ever transmitted over external networks.</p>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--accent-green);">ZERO CLOUD STREAMING · LOCAL ONLY</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Evidence Retention Policy</strong>
+            <p>Retain minimum candidate evidence frames in IndexedDB for demo verification.</p>
+          </div>
+          <button class="btn-pill-quiet" type="button" id="btnPurgeFrames" style="border: 1px solid var(--line-border);">
+            <span>Purge Evidence Frames</span>
+          </button>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Reset Spatial Memory</strong>
+            <p>Erase IndexedDB database and restore baseline desk seed.</p>
+          </div>
+          <button class="btn-pill-quiet" type="button" id="btnResetDatabase" style="color: #b91c1c; border: 1px solid #fee2e2;">
+            <span>Reset Database</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Object Detail & Movement History Drawer Modal -->
+  <div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true">
+    <aside class="drawer-panel" id="drawerPanel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <div class="drawer-header">
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--signal-orange); margin-bottom: 4px;" id="drawerCategory">OBJECT REGISTRY</div>
+          <h2 style="font-family: var(--font-display); font-size: 28px; margin: 0; color: var(--ink-black);" id="drawerTitle">Object Detail</h2>
+          <p style="font-size: 13.5px; color: var(--slate-gray); margin: 4px 0 0;" id="drawerSubtitle">Movement History & Spatial Relational Graph</p>
+        </div>
+        <button class="drawer-close-btn" type="button" id="drawerCloseBtn" aria-label="Close Drawer">✕</button>
+      </div>
+      <div class="drawer-body" id="drawerBody">
+        <!-- Dynamically rendered object details -->
+      </div>
+    </aside>
+  </div>
+
+  <!-- Client-side Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <script src="/src/js/engine/storage.js"></script>
+  <script src="/src/js/engine/capture.js"></script>
+  <script src="/src/js/engine/change-detection.js"></script>
+  <script src="/src/js/engine/vision.js"></script>
+  <script src="/src/js/engine/spatial-memory.js"></script>
+  <script src="/src/js/engine/search.js"></script>
+  <script src="/src/js/engine/index.js"></script>
+  <script src="/src/js/experiences/workspace.js?v=2.0.0"></script>
+  <script type="module" src="/src/api/inspector.js"></script>
+</body>
+</html>

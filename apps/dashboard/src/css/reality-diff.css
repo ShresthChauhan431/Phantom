@@ -390,11 +390,11 @@
   }
 
   .comparison-viewport {
-    min-height: 380px;
+    min-height: 360px;
   }
 
   .reality-evidence-bar {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
   }
 
@@ -410,39 +410,97 @@
   }
 
   .diff-header-block h2 {
-    font-size: clamp(38px, 11vw, 52px);
+    font-size: clamp(28px, 7.5vw, 44px);
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+
+  .diff-lead {
+    font-size: clamp(14px, 3.5vw, 16px);
+    max-width: 100%;
   }
 
   .comparison-viewport {
     aspect-ratio: 4 / 3;
-    min-height: 320px;
+    min-height: 260px;
+    max-height: 380px;
   }
 
   .state-pill {
-    top: 12px;
+    top: 10px;
     padding: 5px 9px;
     gap: 6px;
   }
 
   .state-pill-left {
-    left: 12px;
+    left: 10px;
   }
 
   .state-pill-right {
-    right: 12px;
+    right: 10px;
+  }
+
+  .pill-state {
+    font-size: 7.5px;
   }
 
   .pill-loc {
-    font-size: 11px;
+    font-size: 10.5px;
+  }
+
+  .moved-badge {
+    bottom: 10px;
+    left: 10px;
+    padding: 4px 8px;
+    font-size: 9px;
   }
 
   .divider-handle {
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .reality-evidence-bar {
+    padding: 14px 16px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .evidence-timeline {
+    width: 100%;
+    max-width: 100%;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .timeline-rule {
+    min-width: 20px;
+  }
+
+  .diff-statement-primary {
+    font-size: clamp(22px, 6vw, 32px);
+    overflow-wrap: break-word;
+  }
+
+  .diff-statement-secondary {
+    font-size: 14px;
   }
 
   .diff-editorial-closing {
-    margin-top: 44px;
+    margin-top: 36px;
+  }
+}
+
+@media (max-width: 360px) {
+  .state-pill {
+    padding: 4px 7px;
+    gap: 5px;
+  }
+  .pill-loc {
+    font-size: 9.5px;
+  }
+  .moved-badge {
+    display: none;
   }
 }
 

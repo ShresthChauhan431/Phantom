@@ -1,12 +1,551 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Phantom — Spatial Memory</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f0e8">
+  <meta name="description" content="DISHA remembers where everyday things were and gently shows what changed.">
+  <title>DISHA — Your home remembers</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/style.css?v=4.0.0">
+  <link rel="stylesheet" href="/src/css/phantom.css?v=4.0.0">
+  <link rel="stylesheet" href="/src/css/reality-diff.css?v=4.0.0">
+  <link rel="stylesheet" href="/src/css/memory-receipt.css?v=4.0.0">
+  <link rel="stylesheet" href="/src/css/trust-section.css?v=4.0.0">
+  <link rel="stylesheet" href="/src/css/final-cta.css?v=4.0.0">
+  <link rel="stylesheet" href="/src/css/phantom-core.css?v=3.2.0">
+  <script src="/src/lib/three.min.js?v=3.7.0"></script>
+  <script src="/src/lib/GLTFLoader.js?v=3.7.0"></script>
+  <script src="https://unpkg.com/@rive-app/canvas@2.21.5/rive.js" defer></script>
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="site-header-inner">
+      <a class="wordmark" href="#home" aria-label="DISHA home"><span class="wordmark-initial">D</span><span class="wordmark-rest">ISHA</span><span class="wordmark-period">.</span></a>
+      <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+        <a href="#moments" class="nav-link"><span>How it works</span></a>
+        <a href="/pages/workspace.html" class="nav-link" id="navWorkspaceLink"><span>Workspace</span></a>
+        <a href="/pages/phantom.html" class="nav-link" id="navPhantomLink" data-phantom-trigger="true"><span>PHANTOM</span></a>
+        <a href="#reality-diff-compare" class="nav-link"><span>Reality diff</span></a>
+        <a href="#memory-receipt-section" class="nav-link"><span>Memory receipt</span></a>
+        <a href="#trust" class="nav-link"><span>Trust</span></a>
+      </nav>
+      <div class="header-actions">
+        <button class="header-start" id="btnNavStart" type="button">
+          <span>See the moment</span>
+          <span class="nav-arrow" aria-hidden="true">→</span>
+        </button>
+        <button class="nav-toggle" id="navToggle" type="button" aria-label="Toggle navigation menu" aria-expanded="false">
+          <span class="toggle-bar"></span>
+          <span class="toggle-bar"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="home" aria-labelledby="heroTitle">
+      <div class="hero-world" id="spatialViewport" aria-label="A small, sunlit home with a character, a side table, and a bookshelf"></div>
+      <div class="hero-vignette" aria-hidden="true"></div>
+      <div class="hero-shell site-container">
+        <div class="hero-overline"><span class="live-indicator"></span><span id="storyStatusText" aria-live="polite">A quiet afternoon at home</span></div>
+
+        <div class="hero-copy">
+          <p class="eyebrow" id="heroEyebrow">SPATIAL MEMORY FOR EVERYDAY LIFE</p>
+          <h1 id="heroTitle">Your home<br><em>remembers.</em></h1>
+          <p class="hero-subtitle">DISHA remembers where everyday things were — and shows what changed.</p>
+        </div>
+
+        <aside class="memory-note" id="memoryReceiptToast" aria-live="polite" aria-hidden="true">
+          <div class="memory-note-rule"><span>DISHA MEMORY</span><span class="confirmed-mark"><i></i> CONFIRMED</span></div>
+          <div class="memory-note-object">Reading glasses</div>
+          <div class="memory-note-route"><span>Side table</span><b aria-hidden="true">→</b><span>Bookshelf</span></div>
+          <div class="memory-note-time"><span>2:10 pm <i>→</i> 4:40 pm</span><span>Just one thing moved</span></div>
+        </aside>
+
+        <div class="hero-story-overlay" id="heroStoryOverlay">
+          <div class="hero-narration" id="heroCaptionWrap" aria-live="polite" aria-atomic="true">
+            <p class="narration-title" id="heroCaptionText"></p>
+            <p class="narration-detail" id="heroCaptionSub"></p>
+          </div>
+
+          <div class="hero-actions" id="heroActions">
+            <button class="primary-action" id="btnStartExperience" type="button">
+              <span id="btnExperienceLabel">See how it works</span><span class="action-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="quiet-action" id="btnFindGlasses" type="button">Where are my glasses?</button>
+          </div>
+        </div>
+
+        <div class="hero-progress" aria-hidden="true"><span id="storyProgress"></span></div>
+        <button class="replay-action" id="btnResetExperience" type="button" hidden>Replay the moment <span aria-hidden="true">↺</span></button>
+        <a class="scroll-cue" href="#moments"><span>SCROLL TO FOLLOW THE MOMENT</span><i aria-hidden="true"></i></a>
+      </div>
+    </section>
+
+    <section class="chapter chapter-problem" id="moments" aria-labelledby="problemTitle">
+      <div class="site-container">
+        <div class="chapter-index"><span>01</span><span>A FAMILIAR MOMENT</span></div>
+        <div class="problem-layout">
+          <h2 id="problemTitle">“Where did I<br>put my <em>glasses?</em>”</h2>
+          <div class="problem-copy">
+            <p>Some days, a familiar room can feel a little less familiar.</p>
+            <p>DISHA keeps a gentle memory of where everyday things were, so the answer is close when someone needs it.</p>
+            <button class="text-link" type="button" data-start-story>Watch the moment unfold <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
+        <div class="object-ribbon" aria-label="Everyday objects DISHA can help remember">
+          <span>READING GLASSES</span><i aria-hidden="true"></i><span>HOUSE KEYS</span><i aria-hidden="true"></i><span>MEDICINE</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter-moments" id="moments" aria-labelledby="momentsTitle">
+      <div class="site-container">
+        <div class="chapter-index"><span>02</span><span>THREE QUIET MOMENTS</span></div>
+        <div class="chapter-moments-wrap">
+          <div class="moments-heading">
+            <h2 id="momentsTitle">A little help,<br><em>right on time.</em></h2>
+            <p>Nothing to learn. Nothing to remember about the technology. Just a clear answer when it matters.</p>
+          </div>
+          <ol class="moment-list">
+            <li><span class="moment-number">01</span><div><h3>Remember</h3><p>The glasses have a usual place. DISHA keeps track of it.</p></div><span class="moment-word">BEFORE</span></li>
+            <li><span class="moment-number">02</span><div><h3>Notice</h3><p>Later, they are somewhere else. The room has changed.</p></div><span class="moment-word">AFTER</span></li>
+            <li><span class="moment-number">03</span><div><h3>Explain</h3><p>A small, certain answer replaces a frustrating search.</p></div><span class="moment-word">FOUND</span></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter-diff" id="reality-diff" aria-labelledby="diffTitle">
+      <div class="site-container">
+        <div class="chapter-index"><span>03</span><span>ONE MEANINGFUL CHANGE</span></div>
+        <div class="diff-heading">
+          <h2 id="diffTitle">The room,<br><em>then and now.</em></h2>
+          <p>Move through the afternoon. See what stayed — and what moved.</p>
+        </div>
+        <div class="diff-timeline">
+          <div class="diff-timepoints"><div><span>2:10 PM</span><b>At the side table</b></div><div><span>4:40 PM</span><b>On the bookshelf</b></div></div>
+          <div class="diff-track-wrap">
+            <input class="diff-slider" id="diffRangeSlider" type="range" min="0" max="100" value="0" aria-label="Scrub from the glasses' original location to their new location">
+            <span class="diff-track-line" aria-hidden="true"></span>
+            <span class="diff-track-progress" id="diffTrackProgress" aria-hidden="true"></span>
+            <span class="diff-thumb" aria-hidden="true"></span>
+          </div>
+          <div class="diff-readout"><span class="diff-glasses-mark" aria-hidden="true"><svg viewBox="0 0 62 25" fill="none"><path d="M2 4.5 5 18c.5 2.3 2.5 3.8 4.8 3.8h7.1c2.2 0 4.1-1.5 4.7-3.6L25 8.5h12L41.4 18c.6 2.2 2.5 3.8 4.8 3.8h7c2.4 0 4.4-1.7 4.9-4L61 4.5M4 8l20-.1M38 7.9 59 8M24.5 9c1.7-3.8 3.7-5.6 6.5-5.6S35.8 5.2 37.5 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><p id="scrubCenterText">The glasses begin on the side table.</p><span class="diff-count">01 <i>/</i> 01</span></div>
+          <div class="diff-origin-ghost" id="zoneGhostGlasses" aria-hidden="true">WAS HERE</div>
+        </div>
+        <p class="diff-footnote">A simple visual memory. No searching through recordings.</p>
+      </div>
+    </section>
+
+    <section class="chapter chapter-receipt" id="memory" aria-labelledby="receiptTitle">
+      <div class="site-container">
+        <div class="chapter-index"><span>04</span><span>A MEMORY TO KEEP</span></div>
+        <div class="receipt-layout">
+          <div class="receipt-intro"><p class="eyebrow">CLEAR, CALM, CERTAIN</p><h2 id="receiptTitle">The answer,<br><em>without the search.</em></h2></div>
+          <article class="receipt-artifact" aria-label="Memory receipt confirming that the reading glasses moved from the side table to the bookshelf">
+            <div class="receipt-topline"><span>DISHA</span><span>HOME MEMORY&nbsp; · &nbsp;01</span></div>
+            <p class="receipt-label">READING GLASSES</p>
+            <div class="receipt-route"><div><span>2:10 PM</span><b>Side table</b></div><span class="receipt-arrow" aria-hidden="true">→</span><div><span>4:40 PM</span><b>Bookshelf</b></div></div>
+            <div class="receipt-bottom"><span><i></i> CONFIRMED MOVED</span><span>One meaningful change</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter-phantom" id="phantom" aria-labelledby="phantomTitle">
+      <div class="phantom-grid-overlay" aria-hidden="true"></div>
+      <div class="site-container">
+        <div class="chapter-index"><span>05</span><span>PHANTOM SPATIAL ENGINE</span></div>
+
+        <div class="phantom-layout">
+          <div class="phantom-intro">
+            <p class="eyebrow">05 / PHANTOM</p>
+            <h2 id="phantomTitle">Meet PHANTOM.</h2>
+            <p class="phantom-lead">The spatial memory engine behind DISHA.</p>
+            <p class="phantom-copy">
+              PHANTOM remembers where things were, compares that memory with what exists now, and reveals what changed.
+            </p>
+
+            <div class="phantom-process-row" aria-label="PHANTOM process pipeline">
+              <span class="process-step active" data-step="0">REMEMBER</span>
+              <span class="process-arrow" aria-hidden="true">→</span>
+              <span class="process-step" data-step="1">COMPARE</span>
+              <span class="process-arrow" aria-hidden="true">→</span>
+              <span class="process-step" data-step="2">EXPLAIN</span>
+            </div>
+
+            <div class="phantom-stage-card" id="phantomStageCard" aria-live="polite">
+              <div class="stage-tag" id="phantomStageTag">STATE 01 · IDLE</div>
+              <h3 class="stage-headline" id="phantomStageHeadline">PHANTOM is ready</h3>
+              <p class="stage-description" id="phantomStageDesc">
+                A quiet wireframe coordinate baseline is maintained. Every fixture and surface is mapped into a persistent spatial representation.
+              </p>
+              <div class="stage-diff-details" id="phantomDiffDetails" hidden>
+                <div class="detail-line">
+                  <span class="detail-label">OBJECT MOVED</span>
+                  <span class="detail-val">READING GLASSES</span>
+                </div>
+                <div class="detail-route">
+                  <span class="route-point ghost-text">TABLE (2:10 PM)</span>
+                  <span class="route-sep">→</span>
+                  <span class="route-point active-text">BOOKSHELF (4:40 PM)</span>
+                </div>
+              </div>
+              <div class="stage-statement" id="phantomStageStatement" hidden>
+                “Not a guess. A remembered change.”
+              </div>
+            </div>
+
+            <div class="phantom-stage-selector" role="tablist" aria-label="Phantom States">
+              <button type="button" class="stage-btn active" data-state="idle" role="tab" aria-selected="true">Ready</button>
+              <button type="button" class="stage-btn" data-state="scanning" role="tab" aria-selected="false">Scanning</button>
+              <button type="button" class="stage-btn" data-state="analyzing" role="tab" aria-selected="false">Analyzing</button>
+              <button type="button" class="stage-btn" data-state="change_found" role="tab" aria-selected="false">Found</button>
+              <button type="button" class="stage-btn" data-state="confirmed" role="tab" aria-selected="false">Confirmed</button>
+            </div>
+          </div>
+
+          <div class="phantom-visual-container" id="phantomVisualContainer">
+            <div class="phantom-canvas-wrap" id="phantomCanvasWrap">
+              <canvas id="phantomCanvas" aria-label="3D wireframe room depicting PHANTOM spatial coordinates and memory tracking"></canvas>
+
+              <div class="phantom-spatial-hud" aria-hidden="true">
+                <span class="hud-coord top-left">GRID: 0.25M · EPSILON: 0.02</span>
+                <span class="hud-coord top-right" id="phantomStateHud">PHANTOM READY</span>
+                <span class="hud-coord bottom-left">SPATIAL ANCHORS: 04 TRACKED</span>
+                <span class="hud-coord bottom-right" id="phantomDeltaHud">DELTA: 0.00M</span>
+              </div>
+
+              <div class="rive-status-component" id="rivePhantomIndicator" aria-label="PHANTOM System Indicator">
+                <div class="rive-canvas-container" id="riveCanvasContainer">
+                  <canvas id="riveStatusCanvas" width="96" height="96"></canvas>
+                  <div class="rive-fallback-badge" id="riveFallbackBadge">
+                    <span class="badge-dot" id="riveBadgeDot"></span>
+                    <div class="badge-text">
+                      <span class="badge-brand">PHANTOM</span>
+                      <span class="badge-state" id="riveStateLabel">READY</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter-reality-diff" id="reality-diff-compare" aria-labelledby="realityDiffTitle">
+      <div class="site-container">
+        <div class="chapter-index"><span>06</span><span>REALITY DIFF</span></div>
+
+        <div class="diff-header-block">
+          <p class="eyebrow">06 / REALITY DIFF</p>
+          <h2 id="realityDiffTitle">See what changed.</h2>
+          <p class="diff-lead">
+            DISHA compares moments in your home so the change doesn't have to live only in your memory.
+          </p>
+        </div>
+
+        <div class="reality-comparison-card" id="realityComparisonCard" aria-label="Interactive before and after comparison of the room">
+          <div class="comparison-viewport" id="comparisonViewport">
+            <canvas id="realityDiffCanvas" aria-label="3D visual comparison showing room at 2:10 PM on the left and 4:40 PM on the right"></canvas>
+
+            <div class="state-pill state-pill-left" aria-hidden="true">
+              <span class="pill-dot before-dot"></span>
+              <div class="pill-meta">
+                <span class="pill-state">BEFORE · 2:10 PM</span>
+                <span class="pill-loc">Side table</span>
+              </div>
+            </div>
+
+            <div class="state-pill state-pill-right" aria-hidden="true">
+              <span class="pill-dot after-dot"></span>
+              <div class="pill-meta">
+                <span class="pill-state">AFTER · 4:40 PM</span>
+                <span class="pill-loc">Bookshelf</span>
+              </div>
+            </div>
+
+            <div class="moved-badge" id="movedBadge" aria-hidden="true">
+              <span class="moved-tag">MOVED</span>
+              <span class="moved-route">TABLE → BOOKSHELF</span>
+            </div>
+
+            <div class="diff-split-divider" id="diffSplitDivider" style="left: 50%;">
+              <div class="divider-line"></div>
+              <div class="divider-handle" id="dividerHandle" role="slider" aria-label="Comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+                <span class="handle-arrow">‹</span>
+                <span class="handle-bar"></span>
+                <span class="handle-arrow">›</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="reality-evidence-bar">
+            <div class="evidence-timeline">
+              <div class="time-node">
+                <span class="time-label">2:10 PM</span>
+                <span class="time-anchor">Side table</span>
+              </div>
+              <div class="timeline-rule">
+                <span class="timeline-vector"></span>
+              </div>
+              <div class="time-node">
+                <span class="time-label">4:40 PM</span>
+                <span class="time-anchor">Bookshelf</span>
+              </div>
+            </div>
+
+            <div class="evidence-data">
+              <span class="data-tag">OBJECT MOVED</span>
+              <div class="data-pair">
+                <span class="data-obj">GLASSES</span>
+                <span class="data-arrow">→</span>
+                <span class="data-dest">TABLE → BOOKSHELF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diff-editorial-closing">
+          <p class="diff-statement-primary">“Not everything changes.<br>Only what matters.”</p>
+          <p class="diff-statement-secondary">DISHA makes the difference visible.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter-memory-receipt" id="memory-receipt-section" aria-labelledby="receiptSectionTitle">
+      <div class="receipt-spatial-connector" aria-hidden="true">
+        <span class="connector-line"></span>
+        <span class="connector-node">EVIDENCE</span>
+      </div>
+
+      <div class="site-container">
+        <div class="chapter-index"><span>07</span><span>MEMORY RECEIPT</span></div>
+
+        <div class="receipt-layout">
+          <div class="receipt-intro">
+            <p class="eyebrow">07 / MEMORY RECEIPT</p>
+            <h2 id="receiptSectionTitle">Remembered,<br><em>not guessed.</em></h2>
+            <p class="receipt-lead">
+              DISHA turns a change in your home into a simple record you can understand.
+            </p>
+
+            <div class="receipt-narrative-box">
+              <h3 class="narrative-headline">Every memory has a place.</h3>
+              <p class="narrative-detail">
+                Observed change: reading glasses moved from the side table to the bookshelf.
+              </p>
+            </div>
+          </div>
+
+          <div class="receipt-showcase">
+            <article class="memory-receipt-paper" aria-label="Physical DISHA Memory Receipt for Reading Glasses">
+              <div class="receipt-perforation-top" aria-hidden="true"></div>
+
+              <div class="receipt-header receipt-reveal-item reveal-1">
+                <div class="receipt-brand-mark">
+                  <span class="brand-title">DISHA</span>
+                  <span class="brand-sub">MEMORY RECEIPT</span>
+                </div>
+                <div class="receipt-meta">
+                  <span class="meta-record-id">REC · #0440</span>
+                  <span class="meta-date">TODAY · OCT 6</span>
+                </div>
+              </div>
+
+              <div class="receipt-hero-item">
+                <span class="item-action-tag receipt-reveal-item reveal-2">OBJECT MOVED</span>
+                <h3 class="item-name receipt-reveal-item reveal-3">Reading glasses</h3>
+              </div>
+
+              <div class="receipt-route-grid receipt-reveal-item reveal-4">
+                <div class="route-step from-step">
+                  <span class="step-prefix">FROM</span>
+                  <span class="step-location">Side table</span>
+                  <span class="step-time">2:10 PM</span>
+                </div>
+                <span class="route-arrow" aria-hidden="true">→</span>
+                <div class="route-step to-step">
+                  <span class="step-prefix">TO</span>
+                  <span class="step-location">Bookshelf</span>
+                  <span class="step-time">4:40 PM</span>
+                </div>
+              </div>
+
+              <div class="receipt-evidence-table receipt-reveal-item reveal-5">
+                <div class="evidence-row">
+                  <span>SPATIAL DISPLACEMENT</span>
+                  <span class="row-val">4.85 METERS</span>
+                </div>
+                <div class="evidence-row">
+                  <span>PREVIOUS ANCHOR</span>
+                  <span class="row-val">TABLE · 2:10 PM</span>
+                </div>
+                <div class="evidence-row">
+                  <span>CURRENT ANCHOR</span>
+                  <span class="row-val">SHELF 2 · 4:40 PM</span>
+                </div>
+              </div>
+
+              <div class="receipt-status-footer receipt-reveal-item reveal-6">
+                <div class="status-badge-container">
+                  <span class="status-dot" id="receiptStatusDot"></span>
+                  <span class="status-label" id="receiptStatusLabel">CONFIRMED</span>
+                </div>
+                <span class="receipt-engine-tag">PHANTOM SPATIAL ENGINE</span>
+              </div>
+            </article>
+
+            <div class="receipt-3d-companion receipt-reveal-item reveal-7" aria-label="3D visual preview of the reading glasses">
+              <div class="companion-canvas-wrap">
+                <canvas id="receiptGlassesCanvas" width="240" height="180" aria-label="3D model of reading glasses"></canvas>
+              </div>
+              <span class="companion-caption">PHYSICAL ARTIFACT</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter-trust-manifesto" id="trust" aria-labelledby="trustHeadline">
+      <!-- Subtle PHANTOM Spatial Visualization Backdrop -->
+      <div class="trust-phantom-backdrop" aria-hidden="true">
+        <canvas id="trustPhantomCanvas" class="trust-phantom-canvas"></canvas>
+        <div class="trust-grid-overlay"></div>
+      </div>
+
+      <div class="trust-spatial-connector" aria-hidden="true">
+        <span class="trust-connector-line"></span>
+        <span class="trust-connector-node">TRUST</span>
+      </div>
+
+      <div class="site-container">
+        <div class="chapter-index trust-reveal-item reveal-1">
+          <span>08</span>
+          <span>TRUST</span>
+        </div>
+
+        <div class="trust-editorial-layout">
+          <!-- LEFT / MAIN: Large dominant headline -->
+          <div class="trust-main-col">
+            <p class="eyebrow trust-reveal-item reveal-2">08 / TRUST</p>
+            <h2 id="trustHeadline" class="trust-headline trust-reveal-item reveal-3">
+              Technology should reduce confusion,<br>
+              <em>not create more of it.</em>
+            </h2>
+          </div>
+
+          <!-- RIGHT / SUPPORTING: Concise copy & 3 editorial principles -->
+          <div class="trust-supporting-col">
+            <p class="trust-supporting-lead trust-reveal-item reveal-4">
+              DISHA is designed to support people and caregivers with a clearer picture of what changed around them — without turning everyday life into surveillance.
+            </p>
+
+            <div class="trust-principles-list" role="list">
+              <article class="trust-principle-entry trust-reveal-item reveal-5" role="listitem">
+                <span class="principle-kicker" aria-hidden="true">01 — Context</span>
+                <h3 class="principle-statement">Remember the environment, not just the object.</h3>
+              </article>
+
+              <article class="trust-principle-entry trust-reveal-item reveal-6" role="listitem">
+                <span class="principle-kicker" aria-hidden="true">02 — Clarity</span>
+                <h3 class="principle-statement">Show what changed instead of forcing someone to remember.</h3>
+              </article>
+
+              <article class="trust-principle-entry trust-reveal-item reveal-7" role="listitem">
+                <span class="principle-kicker" aria-hidden="true">03 — Human control</span>
+                <h3 class="principle-statement">Technology assists the caregiver. It does not replace them.</h3>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 09: FINAL CTA -->
+    <section class="chapter chapter-final-cta" id="final-cta" aria-labelledby="ctaHeadline">
+      <div class="cta-backdrop-glow" aria-hidden="true"></div>
+
+      <div class="cta-spatial-connector" aria-hidden="true">
+        <span class="cta-connector-line"></span>
+        <span class="cta-connector-node">DISHA</span>
+      </div>
+
+      <div class="site-container">
+        <div class="chapter-index cta-reveal-item cta-reveal-1">
+          <span>09</span>
+          <span>FINAL MOMENT</span>
+        </div>
+
+        <div class="cta-editorial-layout">
+          <!-- LEFT: Dominant Headline, Supporting Copy, Single Restrained CTA -->
+          <div class="cta-content-col">
+            <p class="eyebrow cta-reveal-item cta-reveal-2">09 / CLOSING</p>
+            <h2 id="ctaHeadline" class="cta-headline cta-reveal-item cta-reveal-3">
+              What if your home<br>
+              <em>could remember for you?</em>
+            </h2>
+
+            <p class="cta-supporting-text cta-reveal-item cta-reveal-4">
+              DISHA gives caregivers a clearer picture of what changed — so everyday uncertainty can become a little easier to navigate.
+            </p>
+
+            <div class="cta-actions cta-reveal-item cta-reveal-5">
+              <button class="cta-explore-btn" id="btnFooterStart" type="button" aria-label="Explore DISHA experience">
+                <span>Explore DISHA</span>
+                <svg class="cta-arrow-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- RIGHT: 3D Remembered Corner of Home -->
+          <div class="cta-world-col cta-reveal-item cta-reveal-6">
+            <div class="cta-world-frame" id="ctaWorldFrame" aria-label="A quiet, remembered corner of the home with reading glasses resting on a side table">
+              <canvas id="ctaWorldCanvas" class="cta-world-canvas"></canvas>
+              <div class="cta-canvas-vignette" aria-hidden="true"></div>
+
+              <div class="cta-spatial-status" aria-hidden="true">
+                <span class="cta-status-pulse"></span>
+                <span class="cta-status-text">PHANTOM · SPATIAL RECORD</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Small Editorial / Technical Closing Row -->
+        <footer class="cta-closing-footer cta-reveal-item cta-reveal-7">
+          <div class="cta-footer-identity">
+            <span class="cta-system-tag">DISHA / PHANTOM</span>
+            <span class="cta-system-desc">A spatial memory system for everyday life.</span>
+          </div>
+          <div class="cta-footer-nav">
+            <a href="#home" class="cta-top-link" id="btnBackToHome">
+              Back to the beginning <span aria-hidden="true">↑</span>
+            </a>
+          </div>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script src="/src/js/experiences/disha-experience.js?v=4.2.0"></script>
+  <script src="/src/js/core/app.js?v=3.7.0"></script>
+  <script src="/src/js/core/phantom-engine.js?v=1.0.0"></script>
+  <script src="/src/js/sections/reality-diff.js?v=1.0.0"></script>
+  <script src="/src/js/sections/memory-receipt.js?v=1.0.0"></script>
+  <script src="/src/js/sections/trust-section.js?v=1.0.0"></script>
+  <script src="/src/js/sections/final-cta.js?v=1.0.1"></script>
+  <script src="/src/js/core/phantom-core.js?v=3.2.0"></script>
+  <script type="module" src="/src/api/inspector.js"></script>
+</body>
 </html>
