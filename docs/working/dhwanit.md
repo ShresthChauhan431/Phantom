@@ -91,10 +91,12 @@ Co-owned (announce before editing): `apps/engine/main.py`, `pyproject.toml`, `Ma
       NotImplemented guidance; actual frame grab is a hardware spike (needs a device + scrcpy).
 - [ ] Tune debounce + motion thresholds against real desk footage (needs real footage; defaults
       are parameterized via `.env`: `PHANTOM_MOTION_THRESHOLD`, `PHANTOM_SETTLE_FRAMES`).
-- [ ] Grounded `bbox` in the understand output so Shresth's reveal can draw it. **Blocked on a
-      coordinated contract change**: `bbox` must flow Delta → store → ObjectRecord → reveal, i.e.
-      a schema bump agreed with Shresth in `shared-contracts.md` + both dev docs. Not changed
-      unilaterally. `reveal.compose_reveal` already accepts an optional `bbox` for when it lands.
+- [ ] Grounded `bbox` in the understand output so Shresth's reveal can draw it.
+      **Contract has landed** (coordinated change by Shresth): `Delta.bbox` (optional
+      `core.geometry.BBox`, normalized 0..1) now flows Delta → store → ObjectRecord → reveal,
+      and the store persists it. Your remaining work: have the VLM/`resolve` **populate**
+      `delta.bbox` when the model grounds a region (qwen2.5-vl returns boxes; normalize to 0..1).
+      Everything downstream already handles `None` → a present box with no other changes.
 
 ## How you verify (evidence, not vibes)
 - `make test` passes `test_gate` + `test_understand`.
@@ -127,6 +129,7 @@ class Delta(BaseModel):
     relations: list[str] = []
     confidence: float                # 0.0–1.0; <0.7 → escalate local→cloud
     frame_ref: str | None = None
+    bbox: BBox | None = None         # core.geometry.BBox {x,y,w,h} 0..1; set when VLM grounds it
     observed_at: datetime            # ISO-8601 with tz
 ```
 Example emit:

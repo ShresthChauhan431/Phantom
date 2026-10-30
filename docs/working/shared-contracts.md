@@ -78,6 +78,7 @@ The VLM output and the thing Memory commits. Lives in
   "relations": ["left of monitor", "on desk"],  // spatial context, may be []
   "confidence": 0.94,                // 0.0–1.0
   "frame_ref": "buf_0412",           // transient RAM-buffer handle, not a file path
+  "bbox": {"x": 0.42, "y": 0.18, "w": 0.12, "h": 0.22},  // optional grounded region, normalized 0..1 (null if ungrounded)
   "observed_at": "2026-10-30T14:05:32+05:30"  // ISO-8601 with tz
 }
 ```
@@ -86,6 +87,9 @@ Rules:
 - `object` is normalized to lowercase snake_case by the Perception side before emit.
 - `event = "ambiguous"` means **do not overwrite** memory — log only.
 - `confidence < 0.7` is the escalation trigger (local → cloud). See ADR-0002.
+- `bbox` is **optional** (normalized 0..1, origin top-left). Perception sets it when the VLM
+  grounds a region; `null` otherwise. Shared type `core.geometry.BBox`. Added additively (no
+  version bump). The store persists it and reveal draws it.
 - Adding a field = **minor**, allowed without version bump if optional + defaulted.
   Renaming/removing/retyping a field = **bump `schema_version`** and update both dev docs.
 
@@ -100,6 +104,7 @@ class Delta(BaseModel):
     relations: list[str] = []
     confidence: float
     frame_ref: str | None = None
+    bbox: BBox | None = None          # core.geometry.BBox {x,y,w,h} normalized 0..1
     observed_at: datetime
 ```
 
@@ -132,6 +137,7 @@ class MemoryStore:
   "last_seen": "2026-10-30T14:05:32+05:30",
   "confidence": 0.94,
   "frame_ref": "buf_0412",
+  "bbox": {"x": 0.42, "y": 0.18, "w": 0.12, "h": 0.22},  // optional, carried from the Delta; null if ungrounded
   "status": "fresh",                 // fresh | stale | ambiguous | removed
   "history": [                       // lineage, newest last
     {"location": "center of desk", "at": "2026-10-30T14:02:15+05:30", "confidence": 0.90},
@@ -141,11 +147,16 @@ class MemoryStore:
 ```
 
 `commit_delta` behavior (the rule that keeps data honest):
-- `appeared` → create record.
-- `moved` → push current location to history, update location/last_seen/confidence.
-- `removed` → mark `status = "removed"`, keep history.
-- `unchanged` → refresh `last_seen` only (heartbeat).
+- `appeared` → create record (persists `bbox`).
+- `moved` → push current location to history, update location/last_seen/confidence/`bbox`.
+- `removed` → mark `status = "removed"`, keep history (keeps last `bbox`).
+- `unchanged` → refresh `last_seen` only (heartbeat); `bbox` preserved.
 - `ambiguous` → **append nothing destructive**; record flagged `ambiguous`, never overwrite.
+
+**Staleness is a VIEW concern, not stored.** The store returns the *committed* status.
+`core.memory.staleness.effective_status` upgrades a still-`fresh` record to `stale` once it
+hasn't been re-observed for `STALE_AFTER` (6 min). The API (`/objects`, `/query`) and reveal
+apply it at read time; `removed`/`ambiguous` are never reinterpreted.
 
 ---
 
@@ -161,6 +172,7 @@ Track B owns both. FastAPI in `apps/engine/api.py`, typed client in `packages/sd
 | GET | `/api/query?q=<text>` | ranked `ObjectRecord[]` (exact → alias → fuzzy) |
 | GET | `/api/objects/{key}/history` | `HistoryEntry[]` |
 | GET | `/api/reveal/{key}` | `{frame_ref, bbox, card}` reveal payload |
+| GET | `/api/frame/{frame_ref}` | the last-known frame as `image/png` (404 if evicted / no live source) |
 | GET | `/api/stream` | SSE live events (optional, last) |
 
 SDK method signatures (frozen):

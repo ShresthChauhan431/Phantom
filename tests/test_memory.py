@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
+from core.geometry import BBox
 from core.memory.store import MemoryStore
 from core.understand.schema.delta import Delta
 
@@ -103,3 +103,20 @@ def test_persistence_across_instances(tmp_path):
     assert rec is not None
     assert rec.location == "on desk"
     s2.close()
+
+
+def test_bbox_persisted_and_preserved(store):
+    bb = BBox(x=0.1, y=0.2, w=0.3, h=0.4)
+    rec = store.commit_delta(
+        Delta(object="bottle", event="appeared", to="desk", confidence=0.9,
+              bbox=bb, observed_at=BASE)
+    )
+    assert rec.bbox == bb
+    # a non-destructive heartbeat keeps the bbox
+    rec2 = store.commit_delta(
+        Delta(object="bottle", event="unchanged", confidence=0.9,
+              observed_at=BASE + timedelta(seconds=30))
+    )
+    assert rec2.bbox == bb
+    # and it survives a fresh store instance (round-trips through SQLite)
+    assert store.get("bottle").bbox == bb

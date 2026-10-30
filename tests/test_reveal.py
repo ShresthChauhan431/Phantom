@@ -54,3 +54,16 @@ def test_naive_last_seen_tolerated():
     naive = datetime(2026, 10, 30, 14, 59, 50)  # no tz
     p = compose_reveal(_rec(last_seen=naive), now=NOW)
     assert p.card.status == "fresh"
+
+
+def test_bbox_sourced_from_record_when_not_passed():
+    bb = BBox(x=0.5, y=0.5, w=0.2, h=0.2)
+    p = compose_reveal(_rec(bbox=bb), now=NOW)
+    assert p.bbox == bb
+
+
+def test_explicit_bbox_overrides_record():
+    rec_bb = BBox(x=0.1, y=0.1, w=0.1, h=0.1)
+    override = BBox(x=0.9, y=0.9, w=0.05, h=0.05)
+    p = compose_reveal(_rec(bbox=rec_bb), bbox=override, now=NOW)
+    assert p.bbox == override

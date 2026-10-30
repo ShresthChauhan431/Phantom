@@ -10,13 +10,18 @@ Owned by Track B (Memory & Serving / Shresth).
 from __future__ import annotations
 
 import os
-
-from fastapi import APIRouter, FastAPI, HTTPException, Query
+from typing import Callable
 
 from core.memory.models import HistoryEntry, ObjectRecord
+from core.memory.staleness import with_effective_status
 from core.memory.store import MemoryStore
 from core.query.search import search
 from core.reveal.compose import RevealPayload, compose_reveal
+from fastapi import APIRouter, FastAPI, HTTPException, Query, Response
+
+# Resolves a transient frame_ref to PNG bytes (or None if evicted/unknown). Supplied
+# by the engine from the live capture buffer; None in API-only / seeded mode.
+FrameSource = Callable[[str], bytes | None]
 
 # Optional human aliases → object keys. Extend as the demo needs.
 DEFAULT_ALIASES: dict[str, str] = {
@@ -28,7 +33,11 @@ DEFAULT_ALIASES: dict[str, str] = {
 }
 
 
-def create_api(store: MemoryStore, aliases: dict[str, str] | None = None) -> FastAPI:
+def create_api(
+    store: MemoryStore,
+    aliases: dict[str, str] | None = None,
+    frame_source: FrameSource | None = None,
+) -> FastAPI:
     """Build a FastAPI app bound to a given store (used by main.py and by tests)."""
     app = FastAPI(title="Phantom Engine", version="0.1.0")
     router = APIRouter(prefix="/api")
@@ -40,11 +49,12 @@ def create_api(store: MemoryStore, aliases: dict[str, str] | None = None) -> Fas
 
     @router.get("/objects", response_model=list[ObjectRecord])
     def objects() -> list[ObjectRecord]:
-        return store.all()
+        return [with_effective_status(r) for r in store.all()]
 
     @router.get("/query", response_model=list[ObjectRecord])
     def query(q: str = Query(..., min_length=1)) -> list[ObjectRecord]:
-        return search(q, store.all(), aliases=alias_map)
+        records = [with_effective_status(r) for r in store.all()]
+        return search(q, records, aliases=alias_map)
 
     @router.get("/objects/{key}/history", response_model=list[HistoryEntry])
     def history(key: str) -> list[HistoryEntry]:
@@ -58,6 +68,20 @@ def create_api(store: MemoryStore, aliases: dict[str, str] | None = None) -> Fas
         if record is None:
             raise HTTPException(status_code=404, detail=f"unknown object: {key}")
         return compose_reveal(record)
+
+    @router.get("/frame/{frame_ref}")
+    def frame(frame_ref: str) -> Response:
+        """Serve the last-known frame image behind a transient frame_ref.
+
+        404 when there is no frame source (API-only mode) or the frame has been
+        evicted from the RAM buffer past its retention window.
+        """
+        if frame_source is None:
+            raise HTTPException(status_code=404, detail="no frame source available")
+        png = frame_source(frame_ref)
+        if png is None:
+            raise HTTPException(status_code=404, detail=f"frame not available: {frame_ref}")
+        return Response(content=png, media_type="image/png")
 
     app.include_router(router)
     return app

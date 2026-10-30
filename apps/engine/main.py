@@ -23,15 +23,31 @@ from core.memory.store import MemoryStore
 
 from .api import create_api
 from .config import Config
-from .loop import build_loop
+from .loop import EngineLoop, build_loop, encode_frame
 
 log = logging.getLogger("phantom.engine")
 
 
-def _run_loop(store: MemoryStore, config: Config) -> None:
+def _frame_source(loop: EngineLoop):
+    """A frame_ref -> PNG resolver backed by the loop's live RAM buffer.
+
+    Resilient: returns None (→ 404) if the frame was evicted or a concurrent
+    buffer mutation trips us up, so the API never crashes serving a stale ref.
+    """
+    def resolve(frame_ref: str) -> bytes | None:
+        try:
+            frame = loop.buffer.get(frame_ref)
+        except Exception:  # transient races with the writer thread
+            return None
+        return encode_frame(frame) if frame is not None else None
+
+    return resolve
+
+
+def _run_loop(loop: EngineLoop) -> None:
     """Run the perception loop, logging (not crashing the process) on failure."""
     try:
-        build_loop(store, config).run()
+        loop.run()
     except NotImplementedError as exc:
         log.warning("capture source not available, loop stopped: %s", exc)
     except Exception:  # keep the API alive even if the loop dies
@@ -50,16 +66,20 @@ def main() -> None:
     # One store, shared by the writer (loop) and the readers (API).
     store = MemoryStore(config.db_path)
 
-    # INTEGRATION HOOK (Track A): start the capture->gate->understand->commit loop
-    # in a background thread. The API below is read-only against the same store.
+    # INTEGRATION HOOK (Track A): build the capture->gate->understand->commit loop and
+    # run it in a background thread. The API reads the same store and serves frames
+    # from the loop's live RAM buffer. PHANTOM_DISABLE_LOOP=1 serves the API only.
+    frame_source = None
     if os.environ.get("PHANTOM_DISABLE_LOOP", "").lower() not in ("1", "true", "yes"):
+        loop = build_loop(store, config)
+        frame_source = _frame_source(loop)
         threading.Thread(
-            target=_run_loop, args=(store, config), name="phantom-loop", daemon=True
+            target=_run_loop, args=(loop,), name="phantom-loop", daemon=True
         ).start()
     else:
         log.info("PHANTOM_DISABLE_LOOP set — serving API only, perception loop not started")
 
-    app = create_api(store)
+    app = create_api(store, frame_source=frame_source)
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PHANTOM_API_PORT", "8000")))
 
 

@@ -4,12 +4,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from fastapi.testclient import TestClient
-
-from apps.engine.api import create_api
 from core.memory.store import MemoryStore
 from core.understand.schema.delta import Delta
+from fastapi.testclient import TestClient
 from sdk.client import ObjectRecord, PhantomClient, RevealPayload
+
+from apps.engine.api import create_api
 
 BASE = datetime(2026, 10, 30, 14, 0, 0, tzinfo=timezone.utc)
 

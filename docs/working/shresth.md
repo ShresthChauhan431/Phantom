@@ -73,10 +73,14 @@ Co-owned (announce before editing): `understand/schema/delta.py`, `apps/engine/m
 - [ ] SDK ↔ API verified from a tiny script (precursor to the future frontend/CLI).
 
 ### M3 — Harden
-- [ ] `status` staleness: mark records `stale` when `last_seen` older than a threshold (feeds the
-      "not re-observed for 6 minutes" trust message).
-- [ ] History tree endpoint returns clean lineage for the future UI.
-- [ ] Reveal payload final once real `frame_ref`/`bbox` exist.
+- [x] `status` staleness: `core.memory.staleness.effective_status` upgrades a `fresh` record to
+      `stale` after 6 min; applied at the view layer (`/objects`, `/query`, reveal). Store stays
+      pure (committed status). Feeds the "not re-observed for 6 minutes" trust message.
+- [x] History tree endpoint returns clean lineage for the future UI (`/api/objects/{key}/history`).
+- [x] Reveal payload wired for `frame_ref`/`bbox`: `GET /api/frame/{frame_ref}` serves the
+      last-known PNG from the live buffer (404 if evicted / API-only mode); `bbox` now flows
+      Delta → store → ObjectRecord → reveal (coordinated contract change, see §B/§C below).
+      Remaining: the VLM actually grounding `bbox` is Dhwanit's (Track A).
 
 ## How you verify (evidence, not vibes)
 - `make seed` populates `data/phantom.db`; `make test` passes `test_memory`/`test_query`.
@@ -107,6 +111,7 @@ class Delta(BaseModel):
     relations: list[str] = []
     confidence: float                # 0.0–1.0
     frame_ref: str | None = None
+    bbox: BBox | None = None         # core.geometry.BBox {x,y,w,h} 0..1 (optional)
     observed_at: datetime            # ISO-8601 with tz
 ```
 
@@ -129,7 +134,8 @@ class MemoryStore:
   "last_seen": "2026-10-30T14:05:32+05:30",
   "confidence": 0.94,
   "frame_ref": "buf_0412",
-  "status": "fresh",                 // fresh | stale | ambiguous | removed
+  "bbox": {"x": 0.42, "y": 0.18, "w": 0.12, "h": 0.22},  // optional, from the Delta; null if ungrounded
+  "status": "fresh",                 // fresh | stale | ambiguous | removed (stale computed at read time)
   "history": [ {"location": "...", "at": "...", "confidence": 0.90} ]  // newest last
 }
 ```
@@ -150,6 +156,7 @@ class MemoryStore:
 | GET | `/api/query?q=<text>` | ranked `ObjectRecord[]` |
 | GET | `/api/objects/{key}/history` | `HistoryEntry[]` |
 | GET | `/api/reveal/{key}` | `{frame_ref, bbox, card}` |
+| GET | `/api/frame/{frame_ref}` | last-known frame `image/png` (404 if evicted / API-only) |
 | GET | `/api/stream` | SSE live events (optional, last) |
 
 ```python

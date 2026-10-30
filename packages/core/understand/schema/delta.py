@@ -19,6 +19,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.geometry import BBox
+
 # Bump this (and update both dev docs) on any breaking schema change.
 SCHEMA_VERSION = 1
 
@@ -49,6 +51,7 @@ class Delta(BaseModel):
     relations: list[str] = Field(default_factory=list)
     confidence: float = Field(ge=0.0, le=1.0)
     frame_ref: str | None = None
+    bbox: BBox | None = None  # grounded region in the frame (optional; added additively)
     observed_at: datetime
 
     def is_committable(self) -> bool:
