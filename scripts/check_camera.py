@@ -118,21 +118,30 @@ def main() -> None:
 
     print("\n--- summary ---")
     if baseline:
-        # max() is corrupted by any residual auto-exposure ramp, so use a robust
-        # high percentile as the noise floor and headroom above it.
+        # Controlled tests established that true sensor noise is absorbed by the
+        # gate's blur (a static scene scores ~0.00000 even at sigma=20), while a real
+        # object move scores ~0.05. So a high baseline is NOT noise to be thresholded
+        # away — it means the scene itself moved or the camera was unstable.
         ordered = sorted(baseline)
         p90 = ordered[min(len(ordered) - 1, int(len(ordered) * 0.9))]
-        print(
-            f"baseline noise: median={statistics.median(baseline):.5f} "
-            f"p90={p90:.5f} max={max(baseline):.5f}"
-        )
-        recommended = max(round(p90 * 2.5, 4), 0.005)
+        median = statistics.median(baseline)
+        print(f"baseline: median={median:.5f} p90={p90:.5f} max={max(baseline):.5f}")
         print(f"current threshold: {gate.motion_threshold}")
-        print(f"recommended PHANTOM_MOTION_THRESHOLD: {recommended}  (~2.5x the p90 noise)")
-        if p90 >= gate.motion_threshold:
-            print("WARNING: sensor noise alone reaches the threshold — the gate would")
-            print("         fire on a still scene and the debouncer would never settle,")
-            print("         so the VLM would never be called. Raise the threshold.")
+
+        # A threshold at or above a plausible object-move score makes the gate deaf.
+        SAFE_CEILING = 0.04
+        if p90 < 0.01:
+            recommended = max(round(p90 * 2.5, 4), 0.005)
+            print(f"✓ scene is genuinely static. Recommended threshold: {recommended}")
+        else:
+            print("DIAGNOSIS: the baseline is far above sensor noise, so the scene was")
+            print("  not static — something moved in frame, or the camera itself moved")
+            print("  (hand-held / nudged cable), or auto-exposure was still hunting.")
+            print("  Do NOT raise the threshold to cover this: a real object move")
+            print(f"  measures only ~0.05, so any threshold above ~{SAFE_CEILING} would")
+            print("  make the gate miss real changes entirely.")
+            print("  FIX: mount the camera so it cannot move, aim it at a still scene,")
+            print("  stay out of frame, then re-run this script.")
     if watch:
         print(f"watch phase: peak motion={max(watch):.5f}, end-state promotions={promotions}")
     print("Nothing was written to disk.")
