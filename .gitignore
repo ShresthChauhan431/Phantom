@@ -21,6 +21,9 @@ data/
 frames/
 *.jpg
 *.png
+# Re-include the committed perception fixtures. The directory itself must be
+# un-ignored first (git cannot rescue files under an excluded directory).
+!tests/fixtures/frames/
 !tests/fixtures/frames/*.png
 !apps/dashboard/src/assets/*.png
 !apps/dashboard/public/**/*.png
