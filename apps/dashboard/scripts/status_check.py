@@ -33,7 +33,7 @@ def record(status: str, group: str, name: str, detail: str = "") -> None:
 def fetch(url: str, timeout: float = 20.0):
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "phantom-status/1.0"})
-        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, r.read(), dict(r.headers)
     except urllib.error.HTTPError as e:
         return e.code, (e.read() or b""), dict(e.headers)
@@ -238,7 +238,7 @@ def main() -> int:
         from http.server import ThreadingHTTPServer
 
         sys.path.insert(0, str(ROOT))
-        import serve  # noqa: PLC0415
+        import serve
 
         port = 5391
         httpd = ThreadingHTTPServer(("127.0.0.1", port), partial(serve.DashboardHandler))
