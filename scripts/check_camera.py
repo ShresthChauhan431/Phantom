@@ -80,7 +80,7 @@ def main() -> None:
     gate = MotionGate(
         motion_threshold=args.threshold if args.threshold is not None else config.motion_threshold
     )
-    debouncer = Debouncer(gate, settle_frames=config.settle_frames)
+    debouncer = Debouncer(gate, settle_frames=config.effective_settle_frames)
 
     print(f"Opening camera: source={args.source} index={args.index} url={args.url or '-'}")
     camera.open()

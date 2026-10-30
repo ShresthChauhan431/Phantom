@@ -158,3 +158,33 @@ def test_reference_tracks_the_latest_stable_scene(frames):
     deb.feed(frames[0])
     deb.feed(frames[1])  # static -> reference should advance
     assert deb.reference is frames[1]
+
+
+# --------------------------------------------- settle window is a duration
+# The settle window must outlast a human pause, or a hand hovering mid-reach gets
+# captured as the new scene state. Measured live: a 0.6s window promoted a hand,
+# a 1.8s window let it withdraw so the transient filter discarded it. Frame counts
+# alone are interval-dependent, so the duration is what gets configured.
+
+
+@pytest.mark.parametrize(
+    "interval,settle_seconds,expected",
+    [
+        (2.0, 2.0, 1),  # 1 frame x 2s = 2s
+        (0.6, 2.0, 4),  # 4 frames x 0.6s = 2.4s, first count to reach 2s
+        (1.0, 2.0, 2),
+        (5.0, 2.0, 1),  # never below one frame
+    ],
+)
+def test_settle_frames_derived_from_duration(interval, settle_seconds, expected):
+    from apps.engine.config import Config
+
+    config = Config(capture_interval=interval, settle_seconds=settle_seconds)
+    assert config.effective_settle_frames == expected
+
+
+def test_explicit_settle_frames_overrides_duration():
+    from apps.engine.config import Config
+
+    config = Config(capture_interval=0.6, settle_seconds=2.0, settle_frames=3)
+    assert config.effective_settle_frames == 3
