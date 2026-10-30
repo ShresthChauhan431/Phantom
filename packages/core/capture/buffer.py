@@ -34,7 +34,7 @@ class FrameBuffer:
             raise ValueError("capacity must be positive")
         self.capacity = capacity
         self.retention = timedelta(seconds=retention_seconds)
-        self._frames: "OrderedDict[str, Frame]" = OrderedDict()
+        self._frames: OrderedDict[str, Frame] = OrderedDict()
 
     def put(self, frame: Frame) -> str:
         """Store ``frame`` and return its ``frame_ref`` handle."""

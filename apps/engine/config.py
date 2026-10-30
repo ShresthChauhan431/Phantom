@@ -71,7 +71,7 @@ class Config:
         return self.retention_hours * 3600.0
 
     @classmethod
-    def from_env(cls, *, load_file: bool = True) -> "Config":
+    def from_env(cls, *, load_file: bool = True) -> Config:
         if load_file:
             load_dotenv()
         return cls(

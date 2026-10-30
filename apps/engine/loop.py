@@ -28,7 +28,6 @@ import time
 from datetime import datetime, timezone
 
 import cv2
-
 from core.capture.base import Camera, Frame
 from core.capture.buffer import FrameBuffer
 from core.capture.replay import ReplayCamera

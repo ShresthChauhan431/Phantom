@@ -37,6 +37,7 @@ def test_debounce_promotes_exactly_the_settled_end_states(frames):
 def test_debounce_flush_emits_unsettled_tail():
     """If a change never sees a trailing quiet frame, flush emits it once."""
     from core.capture.replay import ReplayCamera
+
     from tests.conftest import FRAMES_DIR
 
     cam = ReplayCamera(FRAMES_DIR, interval=2.0)

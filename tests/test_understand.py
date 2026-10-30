@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
-
 from core.gate.debounce import Debouncer
 from core.gate.differ import MotionGate
 from core.understand.providers.base import ProviderError, VLMProvider, parse_delta_json
