@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import datetime, timezone
 from typing import Any, Protocol, runtime_checkable
 
 from core.geometry import BBox
@@ -80,7 +81,9 @@ def coerce_bbox(raw: Any) -> BBox | None:
         return None
 
 
-def parse_delta_json(raw: str, *, frame_ref: str | None = None) -> Delta:
+def parse_delta_json(
+    raw: str, *, frame_ref: str | None = None, observed_at: datetime | None = None
+) -> Delta:
     """Parse a model's raw text response into a validated ``Delta``.
 
     VLMs often wrap JSON in prose or ```json fences. This pulls out the first
@@ -88,6 +91,11 @@ def parse_delta_json(raw: str, *, frame_ref: str | None = None) -> Delta:
     the ``from`` alias), stamps ``frame_ref`` when omitted, and attaches a grounded
     ``bbox`` when the model supplied a usable one. A malformed box is dropped rather
     than failing the whole Delta.
+
+    ``observed_at`` is always taken from the capture pipeline, never the model: a VLM
+    has no idea what time it is and will invent one (observed in practice: a 2024
+    date returned for a live frame), which would corrupt ``last_seen``, staleness,
+    and history ordering downstream.
 
     Raises:
         ProviderError: if no parseable JSON object matching the schema is found.
@@ -101,6 +109,8 @@ def parse_delta_json(raw: str, *, frame_ref: str | None = None) -> Delta:
         raise ProviderError(f"model response was not valid JSON: {exc}") from exc
     if frame_ref is not None and not payload.get("frame_ref"):
         payload["frame_ref"] = frame_ref
+    # Never trust a model-supplied timestamp; use capture time.
+    payload["observed_at"] = (observed_at or datetime.now(timezone.utc)).isoformat()
     # Pull bbox out and coerce it separately so a bad box never rejects a good Delta.
     bbox = coerce_bbox(payload.pop("bbox", None))
     try:

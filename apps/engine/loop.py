@@ -205,7 +205,9 @@ class EngineLoop:
     def _understand_and_commit(self, frame: Frame) -> Delta:
         frame_ref = self.buffer.put(frame)  # ensure the end-state frame is retained
         image_bytes = encode_frame(frame, fmt=".jpg")  # JPEG: 10x smaller upload
-        delta = self.understand.process(self._prev_state_json(), frame_ref, image_bytes)
+        delta = self.understand.process(
+            self._prev_state_json(), frame_ref, image_bytes, observed_at=frame.ts
+        )
         record = self.store.commit_delta(delta)
         log.info(
             "committed delta %s",
