@@ -88,13 +88,28 @@
   async function init() {
     cacheDom();
 
-    // 1. Initialize shared PhantomEngine
-    engine = new PhantomEngine({
+    // 1. Initialize the engine.
+    //
+    // Prefer the backend-backed engine: memory then comes from the real Python
+    // engine (camera -> gate -> VLM -> SQLite) rather than TensorFlow.js in this
+    // tab. It implements the same interface, so everything below is unchanged.
+    // Set window.PHANTOM_USE_LOCAL_ENGINE = true before this script to force the
+    // in-browser engine instead (works with no backend running).
+    const EngineImpl =
+      !window.PHANTOM_USE_LOCAL_ENGINE && window.PhantomBackendEngine
+        ? window.PhantomBackendEngine
+        : PhantomEngine;
+
+    engine = new EngineImpl({
       videoElement: dom.video,
       environmentId: dom.envSelect ? dom.envSelect.value : 'env_desk_01',
       motionThreshold: 0.04,
       settlingDelay: 1500
     });
+    window.PhantomActiveEngine = engine;
+    console.info(
+      `[workspace] engine: ${EngineImpl === PhantomEngine ? 'in-browser (TensorFlow.js)' : 'backend (/api)'}`
+    );
 
     // 2. Attach Engine Listeners
     engine.on('statusChange', ({ status, detail }) => updateStatusUI(status, detail));

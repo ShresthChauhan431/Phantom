@@ -529,7 +529,10 @@
   <script src="/src/js/engine/spatial-memory.js"></script>
   <script src="/src/js/engine/search.js"></script>
   <script src="/src/js/engine/index.js"></script>
-  <script src="/src/js/experiences/workspace.js?v=2.0.0"></script>
+  <!-- Backend-backed engine: same interface, memory sourced from /api instead of
+       TensorFlow.js in the tab. Must load before workspace.js, which picks it. -->
+  <script src="/src/js/engine/backend-engine.js?v=1.0.0"></script>
+  <script src="/src/js/experiences/workspace.js?v=2.1.0"></script>
   <script type="module" src="/src/api/inspector.js"></script>
 </body>
 </html>
