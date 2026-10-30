@@ -20,8 +20,10 @@ import cv2
 import numpy as np
 
 W, H = 640, 480
-DESK = (90, 110, 120)  # BGR muted brown-grey backdrop
-BOTTLE = (180, 120, 40)  # BGR blue-ish
+DESK = (90, 110, 120)  # BGR muted brown-grey backdrop (gray ~111)
+# High-contrast object so a ~2-3% area change clears the motion threshold. The
+# bottle's luminance differs from the desk by far more than the per-pixel delta.
+BOTTLE = (30, 200, 255)  # BGR bright amber (gray ~180)
 
 FRAMES_DIR = Path(__file__).parent / "frames"
 
