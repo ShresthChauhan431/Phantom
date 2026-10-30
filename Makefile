@@ -25,7 +25,7 @@ test:
 	.venv/bin/pytest
 
 seed:
-	.venv/bin/python scripts/seed_demo.py
+	.venv/bin/python scripts/seed_demo.py --reset
 
 clean:
 	rm -rf __pycache__ .pytest_cache .ruff_cache
