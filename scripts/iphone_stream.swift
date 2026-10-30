@@ -17,6 +17,7 @@
 // Diagnostics go to stderr so they never corrupt the frame stream.
 //
 // Run:  swift scripts/iphone_stream.swift [--unique-id <id>] [--fps 2] [--quality 0.8]
+//                                         [--lock-after 3.0]
 
 import AVFoundation
 import CoreImage
@@ -26,6 +27,7 @@ import Foundation
 var uniqueID: String?
 var fps = 2.0
 var quality = 0.8
+var lockAfter = 3.0
 
 var args = Array(CommandLine.arguments.dropFirst())
 var i = 0
@@ -34,6 +36,7 @@ while i < args.count {
     case "--unique-id": if i + 1 < args.count { uniqueID = args[i + 1]; i += 1 }
     case "--fps": if i + 1 < args.count { fps = Double(args[i + 1]) ?? fps; i += 1 }
     case "--quality": if i + 1 < args.count { quality = Double(args[i + 1]) ?? quality; i += 1 }
+    case "--lock-after": if i + 1 < args.count { lockAfter = Double(args[i + 1]) ?? lockAfter; i += 1 }
     default: break
     }
     i += 1
@@ -134,6 +137,39 @@ session.commitConfiguration()
 
 session.startRunning()
 log("session started (fps=\(fps))")
+
+// Lock exposure / white balance / focus once auto has settled.
+//
+// WHY: the gate detects change by differencing consecutive frames, so any global
+// brightness drift reads as motion. Measured on a still desk with auto enabled,
+// the motion score oscillated between 0.003 and 0.048 — above the 0.02 trigger —
+// purely from the camera re-adjusting, which kept the debouncer from ever settling
+// so no frame was ever promoted to the VLM. With these locked, a still scene reads
+// ~0.000 and only real change moves the needle.
+DispatchQueue.global().asyncAfter(deadline: .now() + lockAfter) {
+    do {
+        try camera.lockForConfiguration()
+        var locked: [String] = []
+        if camera.isExposureModeSupported(.locked) {
+            camera.exposureMode = .locked
+            locked.append("exposure")
+        }
+        if camera.isWhiteBalanceModeSupported(.locked) {
+            camera.whiteBalanceMode = .locked
+            locked.append("white-balance")
+        }
+        if camera.isFocusModeSupported(.locked) {
+            camera.focusMode = .locked
+            locked.append("focus")
+        }
+        camera.unlockForConfiguration()
+        log(locked.isEmpty
+            ? "WARNING: device supports no locked modes; expect exposure drift"
+            : "locked after \(lockAfter)s: " + locked.joined(separator: ", "))
+    } catch {
+        log("WARNING: could not lock configuration: \(error.localizedDescription)")
+    }
+}
 
 // Stream until the parent process closes the pipe or kills us.
 RunLoop.main.run()

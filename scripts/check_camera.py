@@ -119,31 +119,42 @@ def main() -> None:
     print("\n--- summary ---")
     if baseline:
         # Controlled tests established that true sensor noise is absorbed by the
-        # gate's blur (a static scene scores ~0.00000 even at sigma=20), while a real
-        # object move scores ~0.05. So a high baseline is NOT noise to be thresholded
-        # away — it means the scene itself moved or the camera was unstable.
+        # gate's blur (a static scene scores ~0.00000 even at sigma=20). So the
+        # *floor* is what characterises a still scene; isolated spikes are real
+        # transient events (a hand reaching in, a shadow) and must not set the
+        # threshold. Use the median as the floor — taking a slice of the run is
+        # fragile, because a single transient inside that slice skews everything.
         ordered = sorted(baseline)
-        p90 = ordered[min(len(ordered) - 1, int(len(ordered) * 0.9))]
-        median = statistics.median(baseline)
-        print(f"baseline: median={median:.5f} p90={p90:.5f} max={max(baseline):.5f}")
-        print(f"current threshold: {gate.motion_threshold}")
+        floor = statistics.median(baseline)
+        quiet = ordered[len(ordered) // 4]  # lower-quartile: the calmest frames
+        peak = max(baseline)
+        print(f"still scene  : quiet={quiet:.5f} median={floor:.5f} peak={peak:.5f}")
+        print(f"threshold now: {gate.motion_threshold}")
+        if watch:
+            print(f"during motion: peak={max(watch):.5f}, promotions={promotions}")
 
-        # A threshold at or above a plausible object-move score makes the gate deaf.
-        SAFE_CEILING = 0.04
-        if p90 < 0.01:
-            recommended = max(round(p90 * 2.5, 4), 0.005)
-            print(f"✓ scene is genuinely static. Recommended threshold: {recommended}")
+        move_peak = max(watch) if watch else 0.0
+        # Put the threshold between the still-scene floor and the observed move.
+        suggested = max(round(max(floor * 2.0, quiet * 4.0), 4), 0.005)
+        if move_peak and suggested >= move_peak:
+            suggested = max(round(move_peak * 0.5, 4), 0.005)
+
+        print(f"\nRECOMMENDED  : PHANTOM_MOTION_THRESHOLD={suggested}")
+        if move_peak:
+            ratio = move_peak / max(floor, 1e-6)
+            print(f"  A real move scored {move_peak:.5f} vs a still median of {floor:.5f}")
+            print(f"  ({ratio:.0f}x separation). {suggested} sits between them.")
+            if move_peak < peak:
+                print(f"  CAUTION: a still-scene spike ({peak:.5f}) exceeded the real move")
+                print("  — that spike was a transient (hand/shadow in frame), not the")
+                print("  camera. Keep the scene clear while the engine runs, or small")
+                print("  moves will be indistinguishable from someone walking past.")
         else:
-            print("DIAGNOSIS: the baseline is far above sensor noise, so the scene was")
-            print("  not static — something moved in frame, or the camera itself moved")
-            print("  (hand-held / nudged cable), or auto-exposure was still hunting.")
-            print("  Do NOT raise the threshold to cover this: a real object move")
-            print(f"  measures only ~0.05, so any threshold above ~{SAFE_CEILING} would")
-            print("  make the gate miss real changes entirely.")
-            print("  FIX: mount the camera so it cannot move, aim it at a still scene,")
-            print("  stay out of frame, then re-run this script.")
-    if watch:
-        print(f"watch phase: peak motion={max(watch):.5f}, end-state promotions={promotions}")
+            print("  No motion was observed, so this is based on the still scene only.")
+            print("  Re-run with --watch 14 and move an object to confirm separation.")
+        if promotions:
+            print("\n✓ a change was promoted to an end-state frame — this is what calls")
+            print("  the VLM, so capture -> gate -> debounce is working end to end.")
     print("Nothing was written to disk.")
 
 

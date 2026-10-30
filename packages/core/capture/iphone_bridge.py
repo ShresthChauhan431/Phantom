@@ -48,6 +48,8 @@ class IPhoneBridgeCamera:
         fps: float | None = None,
         quality: float = 0.8,
         startup_timeout: float = 90.0,
+        lock_after: float = 3.0,
+        settle_extra: float = 1.5,
         script: Path | None = None,
     ) -> None:
         self.interval = interval
@@ -56,6 +58,11 @@ class IPhoneBridgeCamera:
         self.fps = fps if fps is not None else max(1.0, 1.0 / max(interval, 0.1))
         self.quality = quality
         self.startup_timeout = startup_timeout
+        # The helper locks exposure/white-balance after `lock_after` seconds; frames
+        # captured before that still drift in brightness, which the gate would read
+        # as motion. Hold open() until the lock has taken effect.
+        self.lock_after = lock_after
+        self.settle_extra = settle_extra
         self.script = script or _SCRIPT
 
         self._proc: subprocess.Popen[bytes] | None = None
@@ -71,7 +78,16 @@ class IPhoneBridgeCamera:
     def open(self) -> None:
         if not self.script.is_file():
             raise FileNotFoundError(f"Swift capture helper not found: {self.script}")
-        cmd = ["swift", str(self.script), "--fps", f"{self.fps:g}", "--quality", f"{self.quality:g}"]
+        cmd = [
+            "swift",
+            str(self.script),
+            "--fps",
+            f"{self.fps:g}",
+            "--quality",
+            f"{self.quality:g}",
+            "--lock-after",
+            f"{self.lock_after:g}",
+        ]
         if self.unique_id:
             cmd += ["--unique-id", self.unique_id]
 
@@ -90,7 +106,16 @@ class IPhoneBridgeCamera:
         while time.monotonic() < deadline:
             with self._lock:
                 if self._latest is not None:
-                    log.info("iPhone bridge streaming after %.1fs", time.monotonic() - started)
+                    elapsed = time.monotonic() - started
+                    # Wait out the exposure lock so the first frames the gate sees
+                    # are photometrically stable, not mid-adjustment.
+                    remaining = (self.lock_after + self.settle_extra) - elapsed
+                    if remaining > 0:
+                        time.sleep(remaining)
+                    log.info(
+                        "iPhone bridge streaming after %.1fs (exposure settled)",
+                        time.monotonic() - started,
+                    )
                     return
             if self._proc.poll() is not None:
                 break
