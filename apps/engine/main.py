@@ -23,25 +23,9 @@ from core.memory.store import MemoryStore
 
 from .api import create_api
 from .config import Config
-from .loop import EngineLoop, build_loop, encode_frame
+from .loop import EngineLoop, build_loop
 
 log = logging.getLogger("phantom.engine")
-
-
-def _frame_source(loop: EngineLoop):
-    """A frame_ref -> PNG resolver backed by the loop's live RAM buffer.
-
-    Resilient: returns None (→ 404) if the frame was evicted or a concurrent
-    buffer mutation trips us up, so the API never crashes serving a stale ref.
-    """
-    def resolve(frame_ref: str) -> bytes | None:
-        try:
-            frame = loop.buffer.get(frame_ref)
-        except Exception:  # transient races with the writer thread
-            return None
-        return encode_frame(frame) if frame is not None else None
-
-    return resolve
 
 
 def _run_loop(loop: EngineLoop) -> None:
@@ -72,7 +56,7 @@ def main() -> None:
     frame_source = None
     if os.environ.get("PHANTOM_DISABLE_LOOP", "").lower() not in ("1", "true", "yes"):
         loop = build_loop(store, config)
-        frame_source = _frame_source(loop)
+        frame_source = loop.get_frame_png  # serves reveal frames from the RAM buffer
         threading.Thread(
             target=_run_loop, args=(loop,), name="phantom-loop", daemon=True
         ).start()

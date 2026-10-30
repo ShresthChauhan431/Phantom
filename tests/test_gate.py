@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import numpy as np
+import pytest
+from core.capture.base import Frame
 from core.gate.debounce import Debouncer
 from core.gate.differ import MotionGate
 
@@ -53,3 +56,37 @@ def test_debounce_flush_emits_unsettled_tail():
     assert promoted == [3]  # only the appear settled
     tail = deb.flush()
     assert tail is not None and tail.seq == 4  # the move is flushed
+
+
+# ------------------------------------------------- real-camera noise immunity
+# Locks in a property measured against live camera frames: frame-to-frame sensor
+# noise must not read as motion, or the debouncer never settles and the VLM is
+# never called. Synthetic fixtures alone would not catch a regression here.
+
+
+def _noisy(image, sigma, rng):
+    noise = rng.normal(0, sigma, image.shape)
+    return np.clip(image.astype(np.float32) + noise, 0, 255).astype(np.uint8)
+
+
+@pytest.mark.parametrize("sigma", [5, 10, 20])
+def test_sensor_noise_alone_does_not_trigger_the_gate(frames, sigma):
+    rng = np.random.default_rng(42)
+    still = frames[2].image  # a single static scene, sampled twice with noise
+    a = Frame(image=_noisy(still, sigma, rng), seq=0, ts=frames[2].ts)
+    b = Frame(image=_noisy(still, sigma, rng), seq=1, ts=frames[3].ts)
+
+    gate = MotionGate()
+    score = gate.score(a, b)
+    assert score < gate.motion_threshold, f"sigma={sigma} noise read as motion ({score})"
+    assert gate.is_change(a, b) is False
+
+
+@pytest.mark.parametrize("sigma", [0, 10, 20])
+def test_real_move_still_detected_under_noise(frames, sigma):
+    rng = np.random.default_rng(7)
+    before = Frame(image=_noisy(frames[2].image, sigma, rng), seq=0, ts=frames[2].ts)
+    after = Frame(image=_noisy(frames[4].image, sigma, rng), seq=1, ts=frames[4].ts)
+
+    gate = MotionGate()
+    assert gate.is_change(before, after) is True

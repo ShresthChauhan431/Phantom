@@ -1,47 +1,44 @@
-"""iPhone capture adapter (Continuity Camera).
+"""iPhone capture — two routes, neither requiring a matching Apple ID.
 
-STATUS: M3 spike placeholder (shared-contracts §8, dhwanit.md §E). An iPhone over
-USB usually appears as an AVFoundation device OpenCV can open by index; the spike is
-to confirm the index + resolution. Until verified, this raises a clear error so the
-factory/config paths are complete and development falls back to ``replay``.
+Continuity Camera is *not* the only way in, and it is unusable when the Mac and the
+iPhone are signed into different Apple IDs (Apple requires the same account; there
+is no override). So this adapter accepts either:
+
+  1. **Virtual camera index** (USB, recommended) — a bridge app such as Camo presents
+     the iPhone to macOS as a normal camera device, so OpenCV opens it by index just
+     like Continuity Camera would. Set ``PHANTOM_CAMERA_INDEX``.
+     Find the index with ``python scripts/list_cameras.py``.
+  2. **Stream URL** (Wi-Fi, no Mac-side driver) — an RTSP/MJPEG camera app on the
+     phone publishes a URL that OpenCV opens directly. Set ``PHANTOM_CAMERA_URL``,
+     e.g. ``rtsp://192.168.1.42:8554/live`` or ``http://192.168.1.42:8080/video``.
+
+Route 2 is the most robust for OpenCV because it avoids macOS virtual-camera
+enumeration entirely; route 1 keeps everything on the cable.
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import sys
 
 import cv2
 
-from .base import Frame
+from .opencv_camera import OpenCVCamera
 
 
-class IPhoneCamera:
-    """Placeholder ``Camera`` for an iPhone Continuity Camera (AVFoundation device)."""
+class IPhoneCamera(OpenCVCamera):
+    """iPhone as a frame source, via a virtual-camera index or a stream URL."""
 
-    def __init__(self, device_index: int = 0, interval: float = 2.0) -> None:
+    def __init__(
+        self,
+        device_index: int = 0,
+        interval: float = 2.0,
+        url: str | None = None,
+    ) -> None:
+        if url:
+            # URLs are decoded by FFMPEG, not AVFoundation — let OpenCV choose.
+            super().__init__(url, interval=interval, backend=None)
+        else:
+            backend = cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else None
+            super().__init__(device_index, interval=interval, backend=backend)
+        self.url = url
         self.device_index = device_index
-        self.interval = interval
-        self._cap: cv2.VideoCapture | None = None
-        self._seq = 0
-
-    def open(self) -> None:
-        raise NotImplementedError(
-            "iPhone capture is not verified yet (M3 spike). Confirm the AVFoundation "
-            "device index/resolution, then wire it here. Use PHANTOM_CAMERA_SOURCE=replay "
-            "for development. See dhwanit.md §E."
-        )
-
-    def read(self) -> Frame | None:
-        if self._cap is None:
-            raise RuntimeError("IPhoneCamera.read() called before open()")
-        ok, image = self._cap.read()
-        if not ok:
-            return None
-        frame = Frame(image=image, seq=self._seq, ts=datetime.now(timezone.utc))
-        self._seq += 1
-        return frame
-
-    def close(self) -> None:
-        if self._cap is not None:
-            self._cap.release()
-            self._cap = None

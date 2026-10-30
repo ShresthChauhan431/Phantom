@@ -1,31 +1,44 @@
-"""Android capture adapter (scrcpy/adb).
+"""Android capture.
 
-STATUS: M3 spike placeholder (shared-contracts §8, dhwanit.md §E). Getting scrcpy
-2.x ``--video-source=camera`` frames into OpenCV on macOS needs a short spike. Until
-that lands, this raises a clear error so the factory and config paths are complete
-and callers fall back to ``replay`` for development.
+Two supported routes into OpenCV on macOS (scrcpy can't pipe camera frames to
+Python directly here — see dhwanit.md §E):
+
+  1. **Stream URL** (recommended, wireless): an "IP Webcam"-style app on the phone
+     exposes an MJPEG/RTSP feed. Point ``PHANTOM_CAMERA_URL`` at it, e.g.
+     ``http://192.168.1.42:8080/video``. OpenCV opens the URL directly.
+  2. **USB webcam bridge**: an app like Iriun/DroidCam presents the phone as a
+     normal camera device; set ``PHANTOM_CAMERA_INDEX`` to its index
+     (``python scripts/list_cameras.py`` to find it).
+
+``scripts/setup_android.sh`` covers the adb/scrcpy preflight for the USB route.
 """
 
 from __future__ import annotations
 
-from .base import Frame
+from .opencv_camera import OpenCVCamera
 
 
-class AndroidCamera:
-    """Placeholder ``Camera`` for an Android phone over USB (scrcpy/adb)."""
+class AndroidCamera(OpenCVCamera):
+    """Android phone camera via a stream URL or a USB webcam-bridge index."""
 
-    def __init__(self, device: str | None = None, interval: float = 2.0) -> None:
-        self.device = device
-        self.interval = interval
+    def __init__(
+        self,
+        url: str | None = None,
+        device_index: int = 0,
+        interval: float = 2.0,
+    ) -> None:
+        if url:
+            source: int | str = url
+        else:
+            source = device_index
+        super().__init__(source, interval=interval)
+        self.url = url
+        self.device_index = device_index
 
     def open(self) -> None:
-        raise NotImplementedError(
-            "Android capture is not implemented yet (M3 spike). "
-            "Use PHANTOM_CAMERA_SOURCE=replay for development. See dhwanit.md §E."
-        )
-
-    def read(self) -> Frame | None:
-        raise NotImplementedError("Android capture is not implemented yet (M3 spike).")
-
-    def close(self) -> None:
-        return None
+        if not self.url and self.device_index is None:
+            raise RuntimeError(
+                "Android capture needs a source: set PHANTOM_CAMERA_URL (IP Webcam app) "
+                "or PHANTOM_CAMERA_INDEX (USB webcam-bridge app). See dhwanit.md §E."
+            )
+        super().open()

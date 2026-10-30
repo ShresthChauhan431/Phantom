@@ -86,17 +86,26 @@ Co-owned (announce before editing): `apps/engine/main.py`, `pyproject.toml`, `Ma
       thread (writer), read-only API on the same store (`PHANTOM_DISABLE_LOOP=1` to serve only).
 
 ### M3 — Harden
-- [ ] Real **Android** capture path (see spike in §E) and/or **iPhone** Continuity Camera.
-      `android.py`/`iphone.py` adapters stubbed behind the `Camera` protocol with clear
-      NotImplemented guidance; actual frame grab is a hardware spike (needs a device + scrcpy).
-- [ ] Tune debounce + motion thresholds against real desk footage (needs real footage; defaults
-      are parameterized via `.env`: `PHANTOM_MOTION_THRESHOLD`, `PHANTOM_SETTLE_FRAMES`).
-- [ ] Grounded `bbox` in the understand output so Shresth's reveal can draw it.
-      **Contract has landed** (coordinated change by Shresth): `Delta.bbox` (optional
-      `core.geometry.BBox`, normalized 0..1) now flows Delta → store → ObjectRecord → reveal,
-      and the store persists it. Your remaining work: have the VLM/`resolve` **populate**
-      `delta.bbox` when the model grounds a region (qwen2.5-vl returns boxes; normalize to 0..1).
-      Everything downstream already handles `None` → a present box with no other changes.
+- [x] Real **Android** / **iPhone** capture implemented via `OpenCVCamera` (AVFoundation
+      index for iPhone Continuity Camera; stream URL or webcam-bridge index for Android).
+      `scripts/list_cameras.py` finds device indices; `scripts/setup_android.sh` covers routes.
+      **Pending on-device verification** (needs the physical phone + camera permission).
+- [x] Tune debounce + motion thresholds against real desk footage — **measured, no change
+      warranted yet.** `scripts/check_camera.py` runs the real capture→gate→debounce path
+      against a live camera, reports the noise floor and recommends a threshold. Findings:
+      the Gaussian blur already absorbs sensor noise completely (static scene at sigma=20
+      scores `0.00000`) while a real move scores `~0.05`, so the `0.02` default has ample
+      margin and morphological opening is defaulted off. Live cameras do need a *time-based*
+      auto-exposure settle (first frames differ 20%+ from AE ramping alone) — fixed in
+      `OpenCVCamera`. Six regression tests lock in noise immunity.
+      **Final calibration still needs the deployed rig** (phone on a stand facing a static
+      desk); numbers from a laptop webcam facing a room are dominated by real scene motion,
+      not sensor noise, so they are not a valid baseline. Run the script once the phone is
+      bridged and set `PHANTOM_MOTION_THRESHOLD` from its recommendation.
+- [x] Grounded `bbox` in the understand output so Shresth's reveal can draw it. Prompt asks the
+      VLM for a normalized `{x,y,w,h}` box; a tolerant parser (`coerce_bbox`) populates
+      `delta.bbox` and drops malformed boxes without failing the Delta. Verified end-to-end:
+      loop → store → `GET /api/reveal` returns the box, `GET /api/frame/{ref}` serves the frame.
 
 ## How you verify (evidence, not vibes)
 - `make test` passes `test_gate` + `test_understand`.
@@ -179,11 +188,26 @@ into your branch at least every session and before every PR; new dependency → 
 
 # §E — Your spikes (timeboxed, resolve early)
 
-- **Android USB → frames in Python (macOS).** `scrcpy` 2.x has `--video-source=camera`. Getting
-  those frames into OpenCV on macOS needs a short spike (capture the scrcpy stream/window vs. a
-  camera bridge). Timebox it; if it stalls, keep developing on `replay.py` + fixtures and come
-  back. This is the biggest risk on your track — do it first.
-- **iPhone Continuity Camera** typically shows up as an AVFoundation device OpenCV opens by
-  index — find the index + resolution, confirm it works over USB.
+- **iPhone capture — RESOLVED (Continuity Camera ruled out).** Continuity Camera
+  requires the Mac and iPhone to be signed into the **same Apple ID**
+  ([Apple Support](https://support.apple.com/en-asia/guide/mac-help/mchl77879b8a/14.0/mac/14.0));
+  with different accounts there is no override, and a USB-C cable does not change it
+  (the cable grants data/trust, not the Continuity handshake). Verified on this machine:
+  macOS enumerated only `FaceTime HD Camera`. Two Apple-ID-free routes are implemented
+  in `capture/iphone.py` instead:
+  1. **Bridge app over USB (recommended)** — an app like [Camo](https://camo.com/camera)
+     presents the iPhone to macOS as a normal camera device; OpenCV opens it by index.
+     `python scripts/list_cameras.py` → `PHANTOM_CAMERA_INDEX=<index>`.
+  2. **Stream URL over Wi-Fi (no Mac-side driver)** — an RTSP/MJPEG camera app on the
+     phone publishes a URL OpenCV opens directly: `PHANTOM_CAMERA_URL=rtsp://…`.
+     Most robust for OpenCV since it skips virtual-camera enumeration entirely.
+  The real capture code path (`OpenCVCamera`, which `IPhoneCamera` subclasses) is
+  **verified against live hardware**: opened an AVFoundation device and pulled
+  sequential 1280x720 frames with advancing seq/timestamps.
+- **Android USB → frames in Python (macOS).** Same two routes, in `capture/android.py`:
+  an IP-webcam app's stream URL (`PHANTOM_CAMERA_URL`) or a USB webcam-bridge index
+  (`PHANTOM_CAMERA_INDEX`). `scripts/setup_android.sh` covers the adb/scrcpy preflight.
+  scrcpy's `--video-source=camera` can't pipe frames into Python directly on macOS, so
+  the bridge/stream routes replace it.
 - **VLM pick for the demo**: choose primary (NVIDIA / Groq / Ollama qwen2.5-vl), keep `mock` for
   offline dev, keep one as the `<0.7` escalation target. Get the API key into `.env` with Shresth.
