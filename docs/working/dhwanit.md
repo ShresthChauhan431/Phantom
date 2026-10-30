@@ -44,46 +44,57 @@ Co-owned (announce before editing): `apps/engine/main.py`, `pyproject.toml`, `Ma
 ## Task checklist (in order)
 
 ### M0 — Kickoff (do WITH Shresth first, commit to `main`)
-- [ ] Co-finalize `understand/schema/delta.py` (`Delta` Pydantic model, §B). You own the file.
-- [ ] Confirm the `MemoryStore.commit_delta(delta)` signature you'll call (§B).
-- [ ] Agree the provider interface shape so local/cloud/mock are swappable. Commit to `main`,
-      then create your branch (§D).
+- [x] Co-finalize `understand/schema/delta.py` (`Delta` Pydantic model, §B). You own the file.
+      Implemented as a versioned superset (adds `is_committable`/`needs_escalation`, `EventType`,
+      and an `Event` alias for Shresth's draft name). Wire-identical to his M0 draft.
+- [x] Confirm the `MemoryStore.commit_delta(delta)` signature you'll call (§B). Loop codes against
+      the real `MemoryStore` (merged from `shresthBranch`); verified end-to-end.
+- [x] Agree the provider interface shape so local/cloud/mock are swappable (`providers/base.py`).
 
 ### M1 — Build in isolation (your branch)
-- [ ] `capture/base.py`: `Camera` protocol — `read() -> Frame`, `open()/close()`.
-- [ ] `capture/buffer.py`: RAM ring buffer with retention cap; hands out `frame_ref` handles.
-- [ ] `capture/replay.py`: **dev adapter** that replays a folder of recorded phone frames — lets
+- [x] `capture/base.py`: `Camera` protocol — `read() -> Frame`, `open()/close()`.
+- [x] `capture/buffer.py`: RAM ring buffer with retention cap; hands out `frame_ref` handles.
+- [x] `capture/replay.py`: **dev adapter** that replays a folder of recorded phone frames — lets
       you build gate/understand with no phone attached. (This replaces the webcam as the dev
       fallback.)
-- [ ] `gate/differ.py`: frame differencing / motion score (OpenCV). Static → discard. Change →
+- [x] `gate/differ.py`: frame differencing / motion score (OpenCV). Static → discard. Change →
       signal.
-- [ ] `gate/debounce.py`: on change, wait 1–2s for motion to settle, grab the **end-state** frame,
-      promote it.
-- [ ] `understand/providers/local.py`: Ollama (`qwen2.5-vl`) client behind the interface.
-- [ ] `understand/providers/cloud.py`: NVIDIA/Groq (OpenAI-compatible) client for escalation.
-- [ ] `understand/providers/mock.py`: returns canned deltas — your offline test engine.
-- [ ] `understand/prompts/delta.txt`: "previous state JSON + new frame + what changed?" → strict
+- [x] `gate/debounce.py`: on change, wait 1–2s for motion to settle, grab the **end-state** frame,
+      promote it. (Frame-driven state machine + `flush()` for stream EOF.)
+- [x] `understand/providers/local.py`: Ollama (`qwen2.5-vl`) client behind the interface.
+- [x] `understand/providers/cloud.py`: NVIDIA/Groq (OpenAI-compatible) client for escalation.
+- [x] `understand/providers/mock.py`: returns canned deltas — your offline test engine.
+- [x] `understand/prompts/delta.txt`: "previous state JSON + new frame + what changed?" → strict
       JSON matching the `Delta` schema.
-- [ ] `understand/resolve.py`: entity resolution (same object as before?) + relational cross-check
-      (text vs. grounded region agree?). Agree → emit. Disagree → re-sample once → still
-      ambiguous → emit `event="ambiguous"` (never overwrite).
-- [ ] `understand/` glue: normalize `object` to lowercase snake_case, set `confidence`, pick
-      provider by `PHANTOM_VLM_PROVIDER`, escalate to cloud when `confidence < 0.7`.
-- [ ] `apps/engine/config.py`: read `.env` (intervals, retention, provider, camera source).
-- [ ] Tests: `tests/test_gate.py` (replay fixtures → expect trigger/no-trigger),
-      `tests/test_understand.py` (fixture frames + mock → expect valid `Delta` JSON). Use
-      `tests/fixtures/frames/` for the only committed images.
+- [x] `understand/resolve.py`: entity resolution (normalized snake_case key = identity) +
+      cross-check hook → re-sample once → still ambiguous → emit `event="ambiguous"`.
+- [x] `understand/` glue: normalize `object`, pick provider by `PHANTOM_VLM_PROVIDER`, escalate to
+      cloud when `confidence < 0.7` (`resolve.UnderstandService` + `loop.build_understand_service`).
+- [x] `apps/engine/config.py`: read `.env` (intervals, retention, provider, camera source).
+- [x] Tests: `tests/test_gate.py` (replay fixtures → trigger/no-trigger),
+      `tests/test_understand.py` (fixture frames + mock → valid `Delta` JSON).
+      Deterministic fixtures generated into `tests/fixtures/frames/`.
 
 ### M2 — Integration (with Shresth)
-- [ ] `apps/engine/loop.py`: wire capture → gate → understand → `store.commit_delta(delta)` +
-      heartbeat re-validation (every 5–10 min emits `unchanged`/`removed`).
-- [ ] Swap the mock for a real provider. End-to-end on the **phone**: move an object → a `Delta`
-      is produced → Shresth's `GET /api/query` returns the record.
+- [x] `apps/engine/loop.py`: wire capture → gate → understand → `store.commit_delta(delta)` +
+      heartbeat re-validation (periodic `unchanged` refresh of fresh objects).
+- [x] Swap the mock for a real provider: `PHANTOM_VLM_PROVIDER=local|nvidia|groq` selects it via
+      `build_understand_service` (no code change). End-to-end verified on **replay + mock + real
+      store + API**: loop commits `appeared`→`moved`, `GET /api/query?q=bottle` returns the record,
+      `GET /api/reveal/...` renders the trust card. Phone hardware path is the M3 spike below.
+- [x] Integration seam wired in `apps/engine/main.py`: one shared `MemoryStore`, loop in a daemon
+      thread (writer), read-only API on the same store (`PHANTOM_DISABLE_LOOP=1` to serve only).
 
 ### M3 — Harden
 - [ ] Real **Android** capture path (see spike in §E) and/or **iPhone** Continuity Camera.
-- [ ] Tune debounce + motion thresholds against real desk footage.
-- [ ] Grounded `bbox` in the understand output so Shresth's reveal can draw it.
+      `android.py`/`iphone.py` adapters stubbed behind the `Camera` protocol with clear
+      NotImplemented guidance; actual frame grab is a hardware spike (needs a device + scrcpy).
+- [ ] Tune debounce + motion thresholds against real desk footage (needs real footage; defaults
+      are parameterized via `.env`: `PHANTOM_MOTION_THRESHOLD`, `PHANTOM_SETTLE_FRAMES`).
+- [ ] Grounded `bbox` in the understand output so Shresth's reveal can draw it. **Blocked on a
+      coordinated contract change**: `bbox` must flow Delta → store → ObjectRecord → reveal, i.e.
+      a schema bump agreed with Shresth in `shared-contracts.md` + both dev docs. Not changed
+      unilaterally. `reveal.compose_reveal` already accepts an optional `bbox` for when it lands.
 
 ## How you verify (evidence, not vibes)
 - `make test` passes `test_gate` + `test_understand`.
