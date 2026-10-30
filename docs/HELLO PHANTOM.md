@@ -220,8 +220,20 @@ Its defining property: **it tags nothing and requires no user effort.** Unlike R
     5. Typewriter description, chime, micro-bounce.
         
     6. Trust contract: always shows timestamp + confidence, never bare certainty. Stale entry? UI says so: "Not re-observed for 6 minutes — possibly occluded."
-# INTERFACE 
-How will the user interact with the *layers* that are built upon phantom(home intelligence, Inventory, etc)?
-	-Search by name
-	-Search by checking and can see the the change of location of elements in the frame, Previous positions, points of change for individual objects that have switched places
-	-For the elements in the scope of the system - It should log triggers, if no triggers and position not changed then no hisotry, but if it does change position, it should have a tree like ui shown to the user about past locations - timestamp when changed.
+# INTERFACE
+
+How does the user interact with the layers built upon Phantom (home intelligence, inventory, etc.)?
+
+## 1. Search by Name
+The user queries an object by its name or alias, and the system returns its last known location and state.
+
+## 2. Search by Sight
+The user selects an element directly in the frame and can see:
+- how its location changed within the frame
+- its previous positions
+- the exact points of change for individual objects that have switched places
+
+## 3. Trigger Log & History Tree
+For every element in the scope of the system, logging is trigger-based:
+- **No trigger, position unchanged** → no history is recorded.
+- **Position changed** → the object gets a tree-like UI showing its past locations, with a timestamp for each change.
