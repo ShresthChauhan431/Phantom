@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import cv2
 import numpy as np
 import pytest
 from core.capture.base import Frame
@@ -90,3 +91,100 @@ def test_real_move_still_detected_under_noise(frames, sigma):
 
     gate = MotionGate()
     assert gate.is_change(before, after) is True
+
+
+# ----------------------------------------------- transient vs persistent change
+# Measured on real desk footage: a hand reaching across scored 0.041 frame-to-frame
+# while an actual object move scored only 0.022 — so motion magnitude alone cannot
+# separate them, and thresholding would either ignore real moves or fire on hands.
+# The distinction is persistence: a withdrawn hand leaves the scene exactly as it
+# was, a moved object does not. These lock that behaviour in.
+
+
+def _hand_over(image, rng=None):
+    """A frame with a large bright shape across the scene, standing in for a hand."""
+    out = image.copy()
+    h, w = out.shape[:2]
+    cv2.ellipse(out, (w // 2, h // 2), (w // 3, h // 6), 20, 0, 360, (210, 220, 235), -1)
+    return out
+
+
+def test_hand_passing_through_is_not_promoted(frames):
+    """Scene -> hand reaches in -> hand withdraws: nothing changed, so no VLM call."""
+    still = frames[2]  # bottle on desk
+    hand = Frame(image=_hand_over(still.image), seq=1, ts=still.ts)
+    after = Frame(image=still.image.copy(), seq=2, ts=still.ts)  # identical to before
+    settled = Frame(image=still.image.copy(), seq=3, ts=still.ts)
+
+    deb = Debouncer(MotionGate(), settle_frames=1)
+    promoted = [es for f in (still, hand, after, settled) if (es := deb.feed(f)) is not None]
+
+    assert promoted == [], "a hand passing through must not reach the VLM"
+    assert deb.discarded_transients == 1
+    assert deb.promoted == 0
+
+
+def test_hand_that_moves_an_object_is_promoted(frames):
+    """Scene -> hand reaches in -> hand leaves AND the bottle moved: real change."""
+    before = frames[2]  # bottle centre
+    hand = Frame(image=_hand_over(before.image), seq=1, ts=before.ts)
+    moved = Frame(image=frames[4].image.copy(), seq=2, ts=before.ts)  # bottle elsewhere
+    settled = Frame(image=frames[4].image.copy(), seq=3, ts=before.ts)
+
+    deb = Debouncer(MotionGate(), settle_frames=1)
+    promoted = [es for f in (before, hand, moved, settled) if (es := deb.feed(f)) is not None]
+
+    assert len(promoted) == 1, "a real object move must reach the VLM"
+    assert deb.promoted == 1
+    assert deb.discarded_transients == 0
+
+
+def test_change_threshold_can_ignore_small_rearrangements(frames):
+    """A high change_threshold treats even a real move as not worth reporting."""
+    before = frames[2]
+    hand = Frame(image=_hand_over(before.image), seq=1, ts=before.ts)
+    moved = Frame(image=frames[4].image.copy(), seq=2, ts=before.ts)
+    settled = Frame(image=frames[4].image.copy(), seq=3, ts=before.ts)
+
+    deb = Debouncer(MotionGate(), settle_frames=1, change_threshold=0.9)
+    promoted = [es for f in (before, hand, moved, settled) if (es := deb.feed(f)) is not None]
+    assert promoted == []
+    assert deb.discarded_transients == 1
+
+
+def test_reference_tracks_the_latest_stable_scene(frames):
+    """While idle, 'before' follows the scene so slow drift never accumulates."""
+    deb = Debouncer(MotionGate(), settle_frames=1)
+    deb.feed(frames[0])
+    deb.feed(frames[1])  # static -> reference should advance
+    assert deb.reference is frames[1]
+
+
+# --------------------------------------------- settle window is a duration
+# The settle window must outlast a human pause, or a hand hovering mid-reach gets
+# captured as the new scene state. Measured live: a 0.6s window promoted a hand,
+# a 1.8s window let it withdraw so the transient filter discarded it. Frame counts
+# alone are interval-dependent, so the duration is what gets configured.
+
+
+@pytest.mark.parametrize(
+    "interval,settle_seconds,expected",
+    [
+        (2.0, 2.0, 1),  # 1 frame x 2s = 2s
+        (0.6, 2.0, 4),  # 4 frames x 0.6s = 2.4s, first count to reach 2s
+        (1.0, 2.0, 2),
+        (5.0, 2.0, 1),  # never below one frame
+    ],
+)
+def test_settle_frames_derived_from_duration(interval, settle_seconds, expected):
+    from apps.engine.config import Config
+
+    config = Config(capture_interval=interval, settle_seconds=settle_seconds)
+    assert config.effective_settle_frames == expected
+
+
+def test_explicit_settle_frames_overrides_duration():
+    from apps.engine.config import Config
+
+    config = Config(capture_interval=0.6, settle_seconds=2.0, settle_frames=3)
+    assert config.effective_settle_frames == 3

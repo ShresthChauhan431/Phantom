@@ -16,11 +16,12 @@ EXACTLY ONE JSON object, no prose, no markdown fences, matching this schema:
   "to": "<new location, or null>",
   "relations": ["<spatial context>", "..."],
   "confidence": <0.0-1.0>,
-  "bbox": {{"x": <0.0-1.0>, "y": <0.0-1.0>, "w": <0.0-1.0>, "h": <0.0-1.0>}},
-  "observed_at": "<ISO-8601 timestamp with timezone>"
+  "bbox": {{"x": <0.0-1.0>, "y": <0.0-1.0>, "w": <0.0-1.0>, "h": <0.0-1.0>}}
 }}
 
 Rules:
+- Do NOT include any timestamp or date. You cannot know the current time; the
+  system records when the frame was captured.
 - "object" MUST be lowercase snake_case (e.g. "blue_water_bottle", "car_keys").
 - "appeared": object is newly present -> "from" is null.
 - "moved": object was known and is now elsewhere -> both "from" and "to" set.

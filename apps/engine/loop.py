@@ -76,6 +76,17 @@ def build_camera(config: Config) -> Camera:
             interval=config.capture_interval,
         )
     if source == "iphone":
+        # A Continuity Camera is unreachable through OpenCV's index space, so the
+        # Swift/AVFoundation bridge is the default. Use "index" only for a
+        # webcam-bridge app (e.g. Camo) that registers as an ordinary device.
+        if not config.camera_url and config.iphone_capture.lower() != "index":
+            from core.capture.iphone_bridge import IPhoneBridgeCamera
+
+            return IPhoneBridgeCamera(
+                interval=config.capture_interval,
+                unique_id=config.iphone_unique_id or None,
+            )
+
         from core.capture.iphone import IPhoneCamera
 
         return IPhoneCamera(
@@ -121,11 +132,18 @@ def build_understand_service(config: Config) -> UnderstandService:
     return UnderstandService(primary, cloud, escalate_threshold=config.escalate_threshold)
 
 
-def encode_frame(frame: Frame) -> bytes:
-    """PNG-encode a frame's image for transport to a VLM provider."""
-    ok, buf = cv2.imencode(".png", frame.image)
+def encode_frame(frame: Frame, fmt: str = ".png", quality: int = 85) -> bytes:
+    """Encode a frame's image for transport.
+
+    PNG is used where fidelity matters (serving a reveal frame); JPEG is used for
+    VLM uploads. Measured on a real 1920x1080 iPhone frame: 147KB as JPEG versus
+    1.47MB as PNG — 10x less to upload on every captured change. (On flat synthetic
+    fixtures PNG wins instead, which is why the format is explicit per call site.)
+    """
+    params = [cv2.IMWRITE_JPEG_QUALITY, quality] if fmt in (".jpg", ".jpeg") else []
+    ok, buf = cv2.imencode(fmt, frame.image, params)
     if not ok:
-        raise RuntimeError("failed to PNG-encode frame")
+        raise RuntimeError(f"failed to {fmt} encode frame")
     return buf.tobytes()
 
 
@@ -151,7 +169,8 @@ class EngineLoop:
         )
         self.debouncer = debouncer or Debouncer(
             MotionGate(motion_threshold=config.motion_threshold),
-            settle_frames=config.settle_frames,
+            settle_frames=config.effective_settle_frames,
+            change_threshold=config.change_threshold or None,
         )
         self._last_heartbeat = time.monotonic()
 
@@ -186,8 +205,10 @@ class EngineLoop:
 
     def _understand_and_commit(self, frame: Frame) -> Delta:
         frame_ref = self.buffer.put(frame)  # ensure the end-state frame is retained
-        image_bytes = encode_frame(frame)
-        delta = self.understand.process(self._prev_state_json(), frame_ref, image_bytes)
+        image_bytes = encode_frame(frame, fmt=".jpg")  # JPEG: 10x smaller upload
+        delta = self.understand.process(
+            self._prev_state_json(), frame_ref, image_bytes, observed_at=frame.ts
+        )
         record = self.store.commit_delta(delta)
         log.info(
             "committed delta %s",

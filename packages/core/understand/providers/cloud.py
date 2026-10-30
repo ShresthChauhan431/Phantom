@@ -28,6 +28,17 @@ def _load_prompt() -> str:
     return _PROMPT_PATH.read_text(encoding="utf-8")
 
 
+def _image_mime(image_bytes: bytes) -> str:
+    """Detect the payload format so the data URL advertises the right MIME type.
+
+    The loop sends JPEG to keep uploads small (measured on a real 1920x1080 iPhone
+    frame: 147KB as JPEG versus 1.47MB as PNG), but callers may send either.
+    """
+    if image_bytes[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    return "image/png"
+
+
 class CloudProvider:
     """OpenAI-compatible provider. ``name`` reflects the backend (nvidia/groq/cloud)."""
 
@@ -65,6 +76,7 @@ class CloudProvider:
         client = self._ensure_client()
         prompt = self._prompt_template.format(prev_state_json=prev_state_json)
         image_b64 = base64.b64encode(image_bytes).decode("ascii")
+        mime = _image_mime(image_bytes)
         try:
             resp = client.chat.completions.create(
                 model=self.model,
@@ -77,7 +89,7 @@ class CloudProvider:
                             {"type": "text", "text": prompt},
                             {
                                 "type": "image_url",
-                                "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                                "image_url": {"url": f"data:{mime};base64,{image_b64}"},
                             },
                         ],
                     }

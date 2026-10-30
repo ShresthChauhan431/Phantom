@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable
+from datetime import datetime
 
 from .providers.base import ProviderError, VLMProvider
 from .schema.delta import Delta
@@ -83,7 +84,13 @@ class UnderstandService:
         self.escalate_threshold = escalate_threshold
         self.crosscheck = crosscheck or _default_crosscheck
 
-    def process(self, prev_state_json: str, frame_ref: str, image_bytes: bytes) -> Delta:
+    def process(
+        self,
+        prev_state_json: str,
+        frame_ref: str,
+        image_bytes: bytes,
+        observed_at: datetime | None = None,
+    ) -> Delta:
         delta = normalize_delta(self.provider.whats_changed(prev_state_json, frame_ref, image_bytes))
 
         # 2. Escalate low-confidence answers to the cloud, keep the better one.
@@ -109,5 +116,9 @@ class UnderstandService:
                 delta = resampled
             else:
                 delta = _mark_ambiguous(resampled or delta)
+
+        # The capture pipeline owns observation time — a model cannot know it.
+        if observed_at is not None:
+            delta = delta.model_copy(update={"observed_at": observed_at})
 
         return delta

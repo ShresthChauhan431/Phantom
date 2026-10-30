@@ -80,7 +80,7 @@ def main() -> None:
     gate = MotionGate(
         motion_threshold=args.threshold if args.threshold is not None else config.motion_threshold
     )
-    debouncer = Debouncer(gate, settle_frames=config.settle_frames)
+    debouncer = Debouncer(gate, settle_frames=config.effective_settle_frames)
 
     print(f"Opening camera: source={args.source} index={args.index} url={args.url or '-'}")
     camera.open()
@@ -118,23 +118,43 @@ def main() -> None:
 
     print("\n--- summary ---")
     if baseline:
-        # max() is corrupted by any residual auto-exposure ramp, so use a robust
-        # high percentile as the noise floor and headroom above it.
+        # Controlled tests established that true sensor noise is absorbed by the
+        # gate's blur (a static scene scores ~0.00000 even at sigma=20). So the
+        # *floor* is what characterises a still scene; isolated spikes are real
+        # transient events (a hand reaching in, a shadow) and must not set the
+        # threshold. Use the median as the floor — taking a slice of the run is
+        # fragile, because a single transient inside that slice skews everything.
         ordered = sorted(baseline)
-        p90 = ordered[min(len(ordered) - 1, int(len(ordered) * 0.9))]
-        print(
-            f"baseline noise: median={statistics.median(baseline):.5f} "
-            f"p90={p90:.5f} max={max(baseline):.5f}"
-        )
-        recommended = max(round(p90 * 2.5, 4), 0.005)
-        print(f"current threshold: {gate.motion_threshold}")
-        print(f"recommended PHANTOM_MOTION_THRESHOLD: {recommended}  (~2.5x the p90 noise)")
-        if p90 >= gate.motion_threshold:
-            print("WARNING: sensor noise alone reaches the threshold — the gate would")
-            print("         fire on a still scene and the debouncer would never settle,")
-            print("         so the VLM would never be called. Raise the threshold.")
-    if watch:
-        print(f"watch phase: peak motion={max(watch):.5f}, end-state promotions={promotions}")
+        floor = statistics.median(baseline)
+        quiet = ordered[len(ordered) // 4]  # lower-quartile: the calmest frames
+        peak = max(baseline)
+        print(f"still scene  : quiet={quiet:.5f} median={floor:.5f} peak={peak:.5f}")
+        print(f"threshold now: {gate.motion_threshold}")
+        if watch:
+            print(f"during motion: peak={max(watch):.5f}, promotions={promotions}")
+
+        move_peak = max(watch) if watch else 0.0
+        # Put the threshold between the still-scene floor and the observed move.
+        suggested = max(round(max(floor * 2.0, quiet * 4.0), 4), 0.005)
+        if move_peak and suggested >= move_peak:
+            suggested = max(round(move_peak * 0.5, 4), 0.005)
+
+        print(f"\nRECOMMENDED  : PHANTOM_MOTION_THRESHOLD={suggested}")
+        if move_peak:
+            ratio = move_peak / max(floor, 1e-6)
+            print(f"  A real move scored {move_peak:.5f} vs a still median of {floor:.5f}")
+            print(f"  ({ratio:.0f}x separation). {suggested} sits between them.")
+            if move_peak < peak:
+                print(f"  CAUTION: a still-scene spike ({peak:.5f}) exceeded the real move")
+                print("  — that spike was a transient (hand/shadow in frame), not the")
+                print("  camera. Keep the scene clear while the engine runs, or small")
+                print("  moves will be indistinguishable from someone walking past.")
+        else:
+            print("  No motion was observed, so this is based on the still scene only.")
+            print("  Re-run with --watch 14 and move an object to confirm separation.")
+        if promotions:
+            print("\n✓ a change was promoted to an end-state frame — this is what calls")
+            print("  the VLM, so capture -> gate -> debounce is working end to end.")
     print("Nothing was written to disk.")
 
 

@@ -56,29 +56,38 @@ class OpenCVCamera:
             )
         # Keep the latest frame only, so a slow consumer doesn't lag behind.
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        # Let auto-exposure / white-balance settle. Measured on real hardware: the
-        # first frames differ by 20%+ purely from AE ramping, which the gate would
-        # read as motion. This needs elapsed *time*, not just discarded frames.
+        # Let the stream start and auto-exposure / white-balance settle. Measured on
+        # real hardware: the first frames differ by 20%+ purely from AE ramping, which
+        # the gate would read as motion. A cold device (notably Continuity Camera) also
+        # fails its first reads outright, so failures here are expected and must NOT
+        # abort the warmup — only the deadline ends it.
         deadline = time.monotonic() + self.warmup_seconds
-        discarded = 0
-        while discarded < self.warmup_frames or time.monotonic() < deadline:
-            if not cap.read()[0]:
-                break
-            discarded += 1
-            if discarded > self.warmup_frames and time.monotonic() >= deadline:
-                break
+        delivered = 0
+        while time.monotonic() < deadline or delivered < self.warmup_frames:
+            ok, _ = cap.read()
+            if ok:
+                delivered += 1
+            elif time.monotonic() >= deadline:
+                break  # never started streaming; let read() surface it
+            else:
+                time.sleep(0.05)
         self._cap = cap
         self._seq = 0
 
     def read(self) -> Frame | None:
         if self._cap is None:
             raise RuntimeError("OpenCVCamera.read() called before open()")
-        ok, image = self._cap.read()
-        if not ok or image is None:
-            return None
-        frame = Frame(image=image, seq=self._seq, ts=datetime.now(timezone.utc))
-        self._seq += 1
-        return frame
+        # A live device can drop the occasional frame; that is not end-of-stream, so
+        # retry briefly before returning None (which the loop reads as unavailable).
+        for attempt in range(3):
+            ok, image = self._cap.read()
+            if ok and image is not None:
+                frame = Frame(image=image, seq=self._seq, ts=datetime.now(timezone.utc))
+                self._seq += 1
+                return frame
+            if attempt < 2:
+                time.sleep(0.05)
+        return None
 
     def close(self) -> None:
         if self._cap is not None:

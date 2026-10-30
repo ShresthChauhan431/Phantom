@@ -169,3 +169,37 @@ def test_bbox_survives_normalization_and_escalation():
     assert delta.object == "water_bottle"  # normalized
     assert delta.confidence == pytest.approx(0.95)  # escalated
     assert delta.bbox is not None and delta.bbox.w == 0.1  # bbox preserved
+
+
+# ------------------------------------------------- observation time is ours
+# A VLM has no idea what time it is and will invent one. Observed in practice:
+# qwen3.8-27b returned "2024-05-22T12:00:00Z" for a live frame, which would have
+# made every record instantly stale and scrambled history ordering. Capture time
+# is ground truth, so these lock that in.
+
+
+def test_model_supplied_timestamp_is_ignored():
+    raw = (
+        '{"object":"mug","event":"appeared","to":"desk","confidence":0.9,'
+        '"observed_at":"2024-05-22T12:00:00Z"}'
+    )
+    capture_time = datetime(2026, 10, 30, 18, 30, tzinfo=timezone.utc)
+    delta = parse_delta_json(raw, frame_ref="buf_1", observed_at=capture_time)
+    assert delta.observed_at == capture_time
+
+
+def test_missing_timestamp_is_filled_in():
+    raw = '{"object":"mug","event":"appeared","to":"desk","confidence":0.9}'
+    before = datetime.now(timezone.utc)
+    delta = parse_delta_json(raw, frame_ref="buf_1")
+    assert delta.observed_at >= before.replace(microsecond=0)
+
+
+def test_service_stamps_capture_time_over_provider_value():
+    stale = datetime(2024, 5, 22, 12, 0, tzinfo=timezone.utc)
+    capture_time = datetime(2026, 10, 30, 18, 30, tzinfo=timezone.utc)
+    provider = MockProvider(
+        [Delta(object="mug", event="moved", to="desk", confidence=0.9, observed_at=stale)]
+    )
+    delta = UnderstandService(provider).process("[]", "buf_1", b"", observed_at=capture_time)
+    assert delta.observed_at == capture_time
