@@ -88,7 +88,10 @@ console.log('\n2. first run, labels hidden until permission granted');
   const Engine = scenario([MACBOOK, IPHONE], { labelsHidden: true });
   const e = new Engine({ videoElement: null });
   await e._enumerateCameras();
-  check('exactly one permission probe', permissionPrompts === 1, `prompts: ${permissionPrompts}`);
+  check('page load opens no camera (no prompt without Start)', permissionPrompts === 0 && opened.length === 0,
+        `prompts: ${permissionPrompts}, opens: ${JSON.stringify(opened)}`);
+  await e._enumerateCameras({ allowPrompt: true });
+  check('Start triggers exactly one permission probe', permissionPrompts === 1, `prompts: ${permissionPrompts}`);
 }
 
 console.log('\n3. no phone attached');

@@ -1,0 +1,218 @@
+/*
+ * Workspace — live-data additions.
+ * Styles for elements that display engine data and have no equivalent in
+ * workspace.css. Uses the same design tokens; workspace.css is left unchanged.
+ */
+
+/* Header: which engine/camera/model this page is attached to */
+.ws-source-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--slate-gray);
+  padding: 5px 10px;
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ws-source-badge.is-live { color: var(--accent-green); border-color: rgba(22, 163, 74, 0.3); }
+.ws-source-badge.is-down { color: #b91c1c; border-color: #fecaca; }
+
+/* Viewfinder: shown until the live preview starts */
+.ws-vf-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13.5px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+.ws-vf-placeholder strong { color: #fff; font-size: 15px; font-weight: 600; }
+.ws-vf-placeholder.is-hidden { display: none; }
+
+.ws-status-line {
+  padding: 10px 20px 14px;
+  background: #171718;
+  color: #a1a1aa;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+.ws-status-line.is-warn { color: #fbbf24; }
+.ws-status-line.is-error { color: #f87171; }
+
+/* Empty states: say plainly that nothing has been observed yet */
+.ws-empty {
+  padding: 18px 4px;
+  color: var(--slate-gray);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ws-empty strong { color: var(--charcoal); font-weight: 600; }
+
+/* Event chips the engine produces that workspace.css has no colour for */
+.event-type-chip.unchanged { background: #e0f2fe; color: #0369a1; }
+.event-type-chip.ambiguous { background: #f3f4f6; color: #4b5563; }
+
+/* Small tag naming which engine step produced a trigger */
+.ws-kind {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--slate-gray);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+/* Spatial relations reported by the VLM */
+.ws-relations { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.ws-relation {
+  font-size: 11.5px;
+  color: var(--charcoal);
+  background: var(--soft-bone);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+}
+
+/* Telemetry rows in the monitor sidebar and engine tab */
+.ws-tel-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 2px;
+  border-bottom: 1px solid var(--line-border);
+  font-size: 12.5px;
+}
+.ws-tel-row:last-child { border-bottom: 0; }
+.ws-tel-row span:first-child { color: var(--slate-gray); }
+.ws-tel-row span:last-child {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-black);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.ws-tel-row .is-good { color: var(--accent-green); }
+.ws-tel-row .is-bad { color: #b91c1c; }
+
+.ws-fact {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-black);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Screenshot with the VLM's bounding box drawn over it */
+.ws-shot {
+  position: relative;
+  width: 100%;
+  background: #0f0f10;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.ws-shot img { display: block; width: 100%; height: auto; }
+.ws-shot .ws-box {
+  position: absolute;
+  border: 2px solid var(--signal-orange);
+  border-radius: 3px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+.ws-shot .ws-box-label {
+  position: absolute;
+  top: -22px;
+  left: -2px;
+  background: var(--signal-orange);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.ws-noshot {
+  padding: 40px 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: #0f0f10;
+  border-radius: var(--radius-md);
+}
+
+/* History filter */
+.ws-history-search {
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 12px;
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-pill);
+  background: var(--pure-white);
+  min-width: 200px;
+}
+.ws-window-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--slate-gray);
+  margin: -14px 0 18px;
+}
+
+/* Other search matches */
+.ws-matches { margin-top: 22px; }
+.ws-matches h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate-gray);
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.ws-match {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  background: var(--pure-white);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.ws-match:hover { border-color: var(--line-border-strong); }
+.ws-match small { color: var(--slate-gray); font-family: var(--font-mono); font-size: 10.5px; }
+.ws-weak { color: #b45309; font-size: 11px; font-family: var(--font-mono); }
+
+/* Trigger toast */
+.ws-toast {
+  position: fixed;
+  right: 32px;
+  bottom: 28px;
+  z-index: 2000;
+  max-width: 420px;
+  background: #141413;
+  color: #f3f0ee;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  box-shadow: var(--shadow-floating);
+}

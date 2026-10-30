@@ -72,6 +72,28 @@ export const ENDPOINTS = {
       'only resolves while the perception loop is running and within the retention window.',
     build: (frameRef) => `${API_BASE}/frame/${encodeURIComponent(frameRef)}`,
   },
+
+  engine: {
+    id: 'engine',
+    method: 'GET',
+    path: '/api/engine',
+    label: 'Engine telemetry',
+    describes:
+      'What the perception loop is doing right now: camera device and frames, the ' +
+      "gate's motion score, VLM provider/model, call latency and errors.",
+    build: () => `${API_BASE}/engine`,
+  },
+
+  engineEvents: {
+    id: 'engineEvents',
+    method: 'GET',
+    path: '/api/engine/events?since={seq}',
+    label: 'Trigger log',
+    describes:
+      'Every result the VLM produced and the loop committed (scans and changes), newer ' +
+      'than a cursor. The source for live triggers and the 5-minute history.',
+    build: (since = 0) => `${API_BASE}/engine/events?since=${encodeURIComponent(since)}`,
+  },
 };
 
 /** Stable list for docs/inspector rendering. */

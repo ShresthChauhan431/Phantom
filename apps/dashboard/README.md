@@ -161,5 +161,8 @@ Walks every page and script and confirms each reference exists on disk.
   were not present in the source repository. Those layers fall back silently.
 - `public/rive/` holds only a README; `phantom-engine.js` probes for a Rive file and
   degrades when absent.
-- The experience scripts are not yet wired to the engine — `src/api/` is the layer
-  to call from, and the inspector shows what is available.
+- `pages/workspace.html` is fully live (engine telemetry, trigger log, memory,
+  search, screenshots, iPhone preview) via `src/js/engine/backend-engine.js`.
+  The other pages are still the static design experience.
+- Bounding boxes are the VLM's own coordinates and are approximate; they mark
+  roughly where an object is, not its exact outline.

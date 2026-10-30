@@ -121,6 +121,26 @@ def check_api(base: str) -> dict:
         return summary
     record(OK, "Engine API", "GET /api/health", str(data))
 
+    status, telemetry, _ = fetch_json(f"{base}/api/engine")
+    if status == 200 and isinstance(telemetry, dict) and telemetry.get("session"):
+        record(OK, "Engine API", "GET /api/engine",
+               f"state={telemetry.get('state')} · session {telemetry.get('session')}")
+        summary["telemetry"] = telemetry
+    elif status == 200 and isinstance(telemetry, dict):
+        record(FAIL, "Engine API", "GET /api/engine",
+               f"state={telemetry.get('state')} — {telemetry.get('error')}")
+    else:
+        record(FAIL, "Engine API", "GET /api/engine", f"HTTP {status}")
+
+    status, log, _ = fetch_json(f"{base}/api/engine/events")
+    if status == 200 and isinstance(log, dict):
+        events = log.get("events") or []
+        kinds = sorted({e.get("kind") for e in events})
+        record(OK, "Engine API", "GET /api/engine/events",
+               f"{len(events)} trigger(s)" + (f" · {', '.join(kinds)}" if kinds else ""))
+    else:
+        record(FAIL, "Engine API", "GET /api/engine/events", f"HTTP {status}")
+
     status, objects, _ = fetch_json(f"{base}/api/objects")
     objects = objects if isinstance(objects, list) else []
     if status == 200:
@@ -129,8 +149,9 @@ def check_api(base: str) -> dict:
         record(FAIL, "Engine API", "GET /api/objects", f"HTTP {status}")
     summary["objects"] = objects
 
-    # Search: the page's search bar depends on this ranking.
-    for term in ("bottle", "phone"):
+    # Search the page's way: by a word from something the engine actually recorded.
+    terms = [objects[0]["key"].split("_")[-1]] if objects else ["phone"]
+    for term in terms:
         status, hits, _ = fetch_json(f"{base}/api/query?q={term}")
         if status == 200 and isinstance(hits, list):
             names = ", ".join(h["key"] for h in hits[:2])
@@ -182,10 +203,11 @@ def check_page_features(base: str, html: str, summary: dict) -> None:
         "Camera picker": 'id="cameraSourceSelect"',
         "Search bar": 'id="searchInput"',
         "Search results": 'id="searchResultContainer"',
-        "Trigger registry": 'id="objectsRegistryRows"',
-        "History / recent events": 'id="recentEventsOverview"',
-        "Scene screenshots": 'id="deskSnapshotList"',
-        "Motion meter": 'id="motionMeterFill"',
+        "Object registry": 'id="objectsRegistryRows"',
+        "History (5-min trigger log)": 'id="timelineList"',
+        "Latest triggers": 'id="recentEventsOverview"',
+        "Engine telemetry panel": 'id="engineTelemetryList"',
+        "Engine gate meter": 'id="motionMeterFill"',
     }
     for name, marker in needed.items():
         record(OK if marker in html else FAIL, "UI wiring", name,
@@ -194,11 +216,11 @@ def check_page_features(base: str, html: str, summary: dict) -> None:
     record(
         OK if "backend-engine.js" in html else FAIL,
         "UI wiring",
-        "Backend engine loaded",
-        "memory sourced from /api" if "backend-engine.js" in html else "not referenced",
+        "Live engine client loaded",
+        "data sourced from /api" if "backend-engine.js" in html else "not referenced",
     )
 
-    # History window is defined in the adapter; confirm it is the asked-for 5 min.
+    # History window is defined in the client; confirm it is the asked-for 5 min.
     adapter = (ROOT / "src/js/engine/backend-engine.js").read_text(encoding="utf-8")
     m = re.search(r"HISTORY_WINDOW_MS\s*=\s*([^;]+);", adapter)
     if m and "5 * 60 * 1000" in m.group(1):
@@ -206,16 +228,50 @@ def check_page_features(base: str, html: str, summary: dict) -> None:
     else:
         record(WARN, "UI wiring", "History window", m.group(1).strip() if m else "not found")
 
+
+def check_live_only(html: str, summary: dict) -> None:
+    """Fail on anything that could put non-observed data on the page."""
+    forbidden = {
+        "in-browser model (TensorFlow.js)": "tf.min.js",
+        "in-browser detector (coco-ssd)": "coco-ssd",
+        "seeding browser engine": "/src/js/engine/storage.js",
+        "simulated browser engine": "/src/js/engine/index.js",
+    }
+    for name, marker in forbidden.items():
+        present = marker in html
+        record(FAIL if present else OK, "Live only", f"no {name}",
+               f"page still loads {marker}" if present else "")
+
+    t = summary.get("telemetry")
+    if not t:
+        record(FAIL, "Live only", "engine telemetry", "GET /api/engine unavailable")
+        return
+    vlm = t.get("vlm", {})
+    cam = t.get("camera", {})
+    record(FAIL if vlm.get("provider") == "mock" else OK, "Live only", "real VLM",
+           f"{vlm.get('provider')} / {vlm.get('model')}")
+    record(FAIL if cam.get("source") == "replay" else OK, "Live only", "real camera",
+           f"{cam.get('source')} · {cam.get('device') or '?'}")
+    if cam.get("streaming"):
+        record(OK, "Live only", "camera streaming",
+               f"{cam.get('frames')} frames · {cam.get('resolution')} · "
+               f"last {cam.get('last_frame_age_s')}s ago")
+    else:
+        record(FAIL, "Live only", "camera streaming",
+               f"no frames (state {t.get('state')}: {t.get('error') or '—'})")
+    if vlm.get("calls"):
+        record(OK if not vlm.get("failures") else WARN, "Live only", "VLM answering",
+               f"{vlm.get('calls')} calls · {vlm.get('failures')} failed · "
+               f"last {vlm.get('last_latency_ms')}ms")
+    else:
+        record(WARN, "Live only", "VLM answering", "no VLM calls yet")
+
     objects = summary.get("objects") or []
     if objects:
-        cats = {}
-        for o in objects:
-            key = o["key"]
-            cats[key] = o.get("location")
-        record(OK, "Data", "Searchable triggers",
-               ", ".join(list(cats)[:4]) + (" …" if len(cats) > 4 else ""))
+        record(OK, "Data", "Objects detected by the VLM",
+               ", ".join(o["key"] for o in objects[:5]) + (" …" if len(objects) > 5 else ""))
     else:
-        record(WARN, "Data", "Searchable triggers", "memory is empty — run the engine with a camera")
+        record(WARN, "Data", "Objects detected by the VLM", "none yet — put something on the desk")
 
 
 def main() -> int:
@@ -260,6 +316,7 @@ def main() -> int:
         check_cdn(html)
         summary = check_api(base)
         check_page_features(base, html, summary)
+        check_live_only(html, summary)
     finally:
         if httpd is not None:
             httpd.shutdown()
