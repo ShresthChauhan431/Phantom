@@ -7,7 +7,12 @@ from datetime import datetime, timezone
 import pytest
 from core.gate.debounce import Debouncer
 from core.gate.differ import MotionGate
-from core.understand.providers.base import ProviderError, VLMProvider, parse_delta_json
+from core.understand.providers.base import (
+    ProviderError,
+    VLMProvider,
+    coerce_bbox,
+    parse_delta_json,
+)
 from core.understand.providers.mock import MockProvider
 from core.understand.resolve import UnderstandService, normalize_object
 from core.understand.schema.delta import SCHEMA_VERSION, Delta
@@ -105,3 +110,62 @@ def test_crosscheck_failure_emits_ambiguous():
     delta = service.process("[]", "buf_0001", b"")
     assert delta.event == "ambiguous"
     assert delta.is_committable() is False
+
+
+# --------------------------------------------------------------- grounded bbox
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ({"x": 0.1, "y": 0.2, "w": 0.3, "h": 0.4}, (0.1, 0.2, 0.3, 0.4)),
+        ({"x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}, (0.1, 0.2, 0.3, 0.4)),
+        ({"x1": 0.1, "y1": 0.2, "x2": 0.5, "y2": 0.6}, (0.1, 0.2, 0.4, 0.4)),
+        ({"x": -1.0, "y": 2.0, "w": 0.3, "h": 0.4}, (0.0, 1.0, 0.3, 0.4)),  # clamped
+    ],
+)
+def test_coerce_bbox_shapes(raw, expected):
+    box = coerce_bbox(raw)
+    assert box is not None
+    assert (round(box.x, 4), round(box.y, 4), round(box.w, 4), round(box.h, 4)) == expected
+
+
+@pytest.mark.parametrize("raw", [None, "garbage", {"a": 1}, {"x": 0.1, "y": 0.1, "w": 0, "h": 0.2}])
+def test_coerce_bbox_rejects_bad_input(raw):
+    assert coerce_bbox(raw) is None
+
+
+def test_parse_delta_json_attaches_valid_bbox():
+    raw = (
+        '{"object":"mug","event":"moved","to":"desk","confidence":0.9,'
+        '"bbox":{"x":0.2,"y":0.3,"w":0.1,"h":0.15},'
+        '"observed_at":"2026-10-30T14:00:00+05:30"}'
+    )
+    delta = parse_delta_json(raw)
+    assert delta.bbox is not None
+    assert (delta.bbox.x, delta.bbox.y) == (0.2, 0.3)
+
+
+def test_parse_delta_json_drops_bad_bbox_but_keeps_delta():
+    raw = (
+        '{"object":"mug","event":"moved","to":"desk","confidence":0.9,'
+        '"bbox":"not a box","observed_at":"2026-10-30T14:00:00+05:30"}'
+    )
+    delta = parse_delta_json(raw)  # must not raise
+    assert delta.event == "moved"
+    assert delta.bbox is None
+
+
+def test_bbox_survives_normalization_and_escalation():
+    from core.geometry import BBox
+
+    box = BBox(x=0.2, y=0.3, w=0.1, h=0.15)
+    local = MockProvider([Delta(object="Water Bottle", event="moved", to="desk",
+                                confidence=0.5, bbox=box, observed_at=_now())])
+    cloud = MockProvider([Delta(object="Water Bottle", event="moved", to="desk",
+                                confidence=0.95, bbox=box, observed_at=_now())])
+    service = UnderstandService(local, cloud)
+    delta = service.process("[]", "buf_0001", b"")
+    assert delta.object == "water_bottle"  # normalized
+    assert delta.confidence == pytest.approx(0.95)  # escalated
+    assert delta.bbox is not None and delta.bbox.w == 0.1  # bbox preserved

@@ -16,6 +16,7 @@ EXACTLY ONE JSON object, no prose, no markdown fences, matching this schema:
   "to": "<new location, or null>",
   "relations": ["<spatial context>", "..."],
   "confidence": <0.0-1.0>,
+  "bbox": {{"x": <0.0-1.0>, "y": <0.0-1.0>, "w": <0.0-1.0>, "h": <0.0-1.0>}},
   "observed_at": "<ISO-8601 timestamp with timezone>"
 }}
 
@@ -29,6 +30,10 @@ Rules:
   instead of guessing. Set a low "confidence". NEVER invent a change.
 - "relations" is spatial context ("left of monitor", "on desk"); may be [].
 - "confidence" reflects how sure you are. If below 0.7, you are unsure.
+- "bbox" is the object's bounding box in the NEW image, as fractions of width/height
+  with the origin at the TOP-LEFT: "x","y" = top-left corner, "w","h" = size, all in
+  0.0-1.0. Set it to the object you are reporting. Use null if you cannot localize it
+  (e.g. "removed", or you are unsure where it is).
 - Report the SINGLE most significant change only. If several things moved, pick
   the most prominent one.
 

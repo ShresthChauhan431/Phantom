@@ -33,6 +33,7 @@ from core.capture.buffer import FrameBuffer
 from core.capture.replay import ReplayCamera
 from core.gate.debounce import Debouncer
 from core.gate.differ import MotionGate
+from core.geometry import BBox
 from core.memory.store import MemoryStore
 from core.understand.providers.base import VLMProvider
 from core.understand.providers.cloud import KNOWN_BASE_URLS, CloudProvider
@@ -46,13 +47,18 @@ from .config import Config
 log = logging.getLogger("phantom.engine.loop")
 
 # A believable 2-step script for PHANTOM_VLM_PROVIDER=mock, matching the fixture
-# scene (bottle appears, then moves). Cycles so the loop never runs dry offline.
+# scene (bottle appears center, then moves right). Boxes are normalized 0..1 and
+# track the bottle's position so the reveal overlay has something to draw. Cycles
+# so the loop never runs dry offline.
 _MOCK_SCRIPT = [
     Delta(object="blue_water_bottle", event="appeared", to="center of desk",
-          relations=["on desk"], confidence=0.92, observed_at=datetime.now(timezone.utc)),
+          relations=["on desk"], confidence=0.92,
+          bbox=BBox(x=0.46, y=0.35, w=0.09, h=0.34),
+          observed_at=datetime.now(timezone.utc)),
     Delta(object="blue_water_bottle", event="moved", from_="center of desk",
           to="behind laptop", relations=["left of monitor", "on desk"],
-          confidence=0.88, observed_at=datetime.now(timezone.utc)),
+          confidence=0.88, bbox=BBox(x=0.70, y=0.48, w=0.09, h=0.34),
+          observed_at=datetime.now(timezone.utc)),
 ]
 
 
