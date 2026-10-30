@@ -1,0 +1,528 @@
+/* ==============================================================================
+   SECTION 07: MEMORY RECEIPT — STYLES
+   Visual Identity: Physical Memory Artifact + Editorial Spatial Evidence
+   ============================================================================== */
+
+.chapter-memory-receipt {
+  position: relative;
+  background: var(--paper, #FAEBD5);
+  color: var(--ink, #201B18);
+  border-top: 1px solid var(--line, rgba(32, 27, 24, .12));
+  padding-block: var(--section-pad-y);
+  padding-inline: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Spatial Connector from Section 06 */
+.receipt-spatial-connector {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.connector-line {
+  width: 1px;
+  height: 54px;
+  background: linear-gradient(180deg, rgba(201, 95, 61, .4) 0%, rgba(32, 27, 24, .18) 100%);
+}
+
+.connector-node {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--clay);
+  background: var(--paper);
+  padding: 2px 8px;
+  border: 1px solid rgba(201, 95, 61, .25);
+  border-radius: 10px;
+  margin-top: -6px;
+}
+
+.chapter-memory-receipt .chapter-index {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+}
+
+/* Section Grid Layout: Asymmetrical Editorial Composition */
+.receipt-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(48px, 6vw, 96px);
+  align-items: start;
+  width: 100%;
+  margin: var(--space-4) 0 0;
+}
+
+/* Left Column: Editorial Copy */
+.receipt-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.receipt-intro .eyebrow {
+  margin: 0;
+  color: var(--clay);
+  font-family: var(--font-mono);
+  font-size: var(--text-eyebrow-size);
+  font-weight: var(--text-eyebrow-weight);
+  letter-spacing: var(--text-eyebrow-ls);
+  text-transform: uppercase;
+}
+
+.receipt-intro h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h1-size);
+  font-weight: 400;
+  line-height: var(--text-h1-lh);
+  letter-spacing: var(--text-h1-ls);
+  max-width: var(--text-h1-max);
+  color: var(--ink-black);
+}
+
+.receipt-lead {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-lead-size);
+  line-height: var(--text-lead-lh);
+  color: var(--slate-gray);
+  max-width: 44ch;
+  font-weight: 400;
+}
+
+.receipt-narrative-box {
+  margin-top: 14px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, .8);
+  border-left: 2px solid var(--signal-orange);
+  border-radius: 0 4px 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.narrative-headline {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink-black);
+  letter-spacing: -.01em;
+}
+
+.narrative-detail {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--slate-gray);
+  font-weight: 400;
+}
+
+/* Right Column: Physical Memory Receipt & 3D Companion Showcase */
+.receipt-showcase {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: clamp(32px, 4vw, 56px);
+  width: 100%;
+}
+
+/* The Tangible Memory Receipt Artifact */
+.memory-receipt-paper {
+  position: relative;
+  flex: 0 1 420px;
+  width: 100%;
+  max-width: 420px;
+  background: #FCF8F2;
+  border: 1px solid rgba(75, 49, 31, .14);
+  border-radius: 3px;
+  padding: 32px 36px;
+  box-shadow:
+    0 24px 64px rgba(75, 49, 31, .09),
+    0 4px 18px rgba(75, 49, 31, .04),
+    0 1px 3px rgba(75, 49, 31, .06);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transform-origin: center top;
+  z-index: 1;
+}
+
+/* Subtle Perforated Top Edge */
+.receipt-perforation-top {
+  position: absolute;
+  top: -1px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background-image: radial-gradient(circle, var(--paper) 1.5px, transparent 1.5px);
+  background-size: 8px 3px;
+}
+
+/* Receipt Header */
+.receipt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed rgba(75, 49, 31, .22);
+}
+
+.receipt-brand-mark {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: var(--font-body);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-black);
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--slate-gray);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.receipt-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: var(--slate-gray);
+  font-weight: 500;
+}
+
+.meta-record-id {
+  color: var(--signal-orange);
+  font-weight: 600;
+}
+
+/* Most Important: Object Moved */
+.receipt-hero-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-action-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--signal-orange);
+  font-weight: 600;
+}
+
+.item-name {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(28px, 3.2vw, 36px);
+  font-weight: 500;
+  color: var(--ink-black);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+/* Spatial Transition Route */
+.receipt-route-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px dashed rgba(75, 49, 31, .16);
+  border-bottom: 1px dashed rgba(75, 49, 31, .16);
+}
+
+.route-step {
+  display: flex;
+  flex-direction: column;
+}
+
+.route-step.from-step {
+  text-align: left;
+}
+
+.route-step.to-step {
+  text-align: right;
+}
+
+.step-prefix {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #8C7B6D;
+}
+
+.step-location {
+  font-family: var(--font-body);
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.step-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #726A5E;
+  margin-top: 2px;
+}
+
+.route-arrow {
+  color: var(--clay);
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Evidence Metadata Rows */
+.receipt-evidence-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .10em;
+  color: #726A5E;
+}
+
+.evidence-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.row-val {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* Confidence Status Badge */
+.receipt-status-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(75, 49, 31, .22);
+}
+
+.status-badge-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(83, 97, 59, .10);
+  border: 1px solid rgba(83, 97, 59, .30);
+  border-radius: 20px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--olive);
+  box-shadow: 0 0 0 3px rgba(83, 97, 59, .22);
+}
+
+.status-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--olive-deep);
+  font-weight: 600;
+}
+
+.receipt-engine-tag {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8C7B6D;
+}
+
+/* 3D Physical Companion Glasses Element */
+.receipt-3d-companion {
+  position: relative;
+  flex: 0 0 240px;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  z-index: 3;
+}
+
+.companion-canvas-wrap {
+  position: relative;
+  width: 240px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.companion-canvas-wrap canvas#receiptGlassesCanvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+}
+
+/* Physical Artifact Label Directly Beneath with Consistent Spacing */
+.companion-caption {
+  position: relative;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #726A5E;
+  background: rgba(253, 249, 242, .92);
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(75, 49, 31, .14);
+  box-shadow: 0 2px 6px rgba(75, 49, 31, .04);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ==============================================================================
+   JITTER-READY ANIMATION ARCHITECTURE (Clean CSS Staggered Reveal)
+   ============================================================================== */
+
+.receipt-reveal-item {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .55s cubic-bezier(.22, 1, .36, 1), transform .55s cubic-bezier(.22, 1, .36, 1);
+}
+
+.chapter-memory-receipt.revealed .receipt-reveal-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger Delays */
+.chapter-memory-receipt.revealed .reveal-1 { transition-delay: .05s; }
+.chapter-memory-receipt.revealed .reveal-2 { transition-delay: .15s; }
+.chapter-memory-receipt.revealed .reveal-3 { transition-delay: .25s; }
+.chapter-memory-receipt.revealed .reveal-4 { transition-delay: .35s; }
+.chapter-memory-receipt.revealed .reveal-5 { transition-delay: .45s; }
+.chapter-memory-receipt.revealed .reveal-6 { transition-delay: .55s; }
+.chapter-memory-receipt.revealed .reveal-7 { transition-delay: .65s; }
+
+/* ==============================================================================
+   RESPONSIVE DESIGN (Tablet & Mobile)
+   ============================================================================== */
+
+@media (max-width: 980px) {
+  .chapter-memory-receipt {
+    padding-block: var(--section-pad-y);
+    padding-inline: 0;
+  }
+
+  .receipt-layout {
+    grid-template-columns: 1fr;
+    gap: 48px;
+    margin-top: 48px;
+  }
+
+  .receipt-intro {
+    max-width: 100%;
+  }
+
+  .receipt-lead {
+    max-width: 100%;
+  }
+
+  .receipt-showcase {
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .memory-receipt-paper {
+    flex: auto;
+    max-width: 100%;
+  }
+
+  .receipt-3d-companion {
+    align-self: center;
+    margin-bottom: 0;
+    width: 220px;
+  }
+
+  .companion-canvas-wrap {
+    width: 220px;
+    height: 165px;
+  }
+}
+
+@media (max-width: 640px) {
+  .chapter-memory-receipt {
+    padding-block: var(--section-pad-y);
+    padding-inline: 0;
+  }
+
+  .receipt-intro h2 {
+    font-size: clamp(38px, 11vw, 52px);
+  }
+
+  .memory-receipt-paper {
+    padding: 24px 20px;
+  }
+
+  .item-name {
+    font-size: 28px;
+  }
+
+  .step-location {
+    font-size: 17px;
+  }
+
+  .receipt-3d-companion {
+    width: 200px;
+  }
+
+  .companion-canvas-wrap {
+    width: 200px;
+    height: 150px;
+  }
+}
+
+/* Accessibility: prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .receipt-reveal-item {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

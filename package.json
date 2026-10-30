@@ -1,0 +1,16 @@
+{
+  "name": "phantom-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/dashboard"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/dashboard",
+    "build": "npm run build --workspace=apps/dashboard",
+    "dashboard": "npm run dev --workspace=apps/dashboard"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

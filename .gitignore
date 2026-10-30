@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Runtime data
+data/
+*.db
+*.sqlite*
+frames/
+*.jpg
+*.png
+!tests/fixtures/frames/*.png
+!apps/dashboard/src/assets/*.png
+!apps/dashboard/public/**/*.png
+
+# Secrets
+.env
+.env.local
+
+# Node / Dashboard
+node_modules/
+dist/
+.vite/
+*.log
+npm-debug.log*
+
+# Models
+*.gguf
+*.ckpt
+*.safetensors
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# System
+Thumbs.db
