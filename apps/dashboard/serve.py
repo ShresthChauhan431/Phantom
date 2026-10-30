@@ -37,7 +37,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     # ------------------------------------------------------------------ routing
-    def do_GET(self) -> None:  # noqa: N802 - stdlib naming
+    def do_GET(self) -> None:
         if self.path.startswith("/api/"):
             self._proxy()
             return
@@ -59,7 +59,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
     def _proxy(self) -> None:
         target = f"{self.engine_base}{self.path}"
         try:
-            with urllib.request.urlopen(target, timeout=30) as upstream:  # noqa: S310
+            with urllib.request.urlopen(target, timeout=30) as upstream:
                 body = upstream.read()
                 self.send_response(upstream.status)
                 content_type = upstream.headers.get("Content-Type", "application/json")
