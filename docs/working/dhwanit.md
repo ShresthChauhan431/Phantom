@@ -86,17 +86,16 @@ Co-owned (announce before editing): `apps/engine/main.py`, `pyproject.toml`, `Ma
       thread (writer), read-only API on the same store (`PHANTOM_DISABLE_LOOP=1` to serve only).
 
 ### M3 — Harden
-- [ ] Real **Android** capture path (see spike in §E) and/or **iPhone** Continuity Camera.
-      `android.py`/`iphone.py` adapters stubbed behind the `Camera` protocol with clear
-      NotImplemented guidance; actual frame grab is a hardware spike (needs a device + scrcpy).
+- [x] Real **Android** / **iPhone** capture implemented via `OpenCVCamera` (AVFoundation
+      index for iPhone Continuity Camera; stream URL or webcam-bridge index for Android).
+      `scripts/list_cameras.py` finds device indices; `scripts/setup_android.sh` covers routes.
+      **Pending on-device verification** (needs the physical phone + camera permission).
 - [ ] Tune debounce + motion thresholds against real desk footage (needs real footage; defaults
       are parameterized via `.env`: `PHANTOM_MOTION_THRESHOLD`, `PHANTOM_SETTLE_FRAMES`).
-- [ ] Grounded `bbox` in the understand output so Shresth's reveal can draw it.
-      **Contract has landed** (coordinated change by Shresth): `Delta.bbox` (optional
-      `core.geometry.BBox`, normalized 0..1) now flows Delta → store → ObjectRecord → reveal,
-      and the store persists it. Your remaining work: have the VLM/`resolve` **populate**
-      `delta.bbox` when the model grounds a region (qwen2.5-vl returns boxes; normalize to 0..1).
-      Everything downstream already handles `None` → a present box with no other changes.
+- [x] Grounded `bbox` in the understand output so Shresth's reveal can draw it. Prompt asks the
+      VLM for a normalized `{x,y,w,h}` box; a tolerant parser (`coerce_bbox`) populates
+      `delta.bbox` and drops malformed boxes without failing the Delta. Verified end-to-end:
+      loop → store → `GET /api/reveal` returns the box, `GET /api/frame/{ref}` serves the frame.
 
 ## How you verify (evidence, not vibes)
 - `make test` passes `test_gate` + `test_understand`.
