@@ -13,6 +13,7 @@ warmup) to avoid serving stale, laggy frames.
 
 from __future__ import annotations
 
+import time
 from datetime import datetime, timezone
 
 import cv2
@@ -30,11 +31,13 @@ class OpenCVCamera:
         interval: float = 2.0,
         backend: int | None = None,
         warmup_frames: int = 5,
+        warmup_seconds: float = 1.5,
     ) -> None:
         self.source = source
         self.interval = interval
         self.backend = backend
         self.warmup_frames = warmup_frames
+        self.warmup_seconds = warmup_seconds
         self._cap: cv2.VideoCapture | None = None
         self._seq = 0
 
@@ -53,8 +56,17 @@ class OpenCVCamera:
             )
         # Keep the latest frame only, so a slow consumer doesn't lag behind.
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        for _ in range(self.warmup_frames):  # let auto-exposure/white-balance settle
-            cap.read()
+        # Let auto-exposure / white-balance settle. Measured on real hardware: the
+        # first frames differ by 20%+ purely from AE ramping, which the gate would
+        # read as motion. This needs elapsed *time*, not just discarded frames.
+        deadline = time.monotonic() + self.warmup_seconds
+        discarded = 0
+        while discarded < self.warmup_frames or time.monotonic() < deadline:
+            if not cap.read()[0]:
+                break
+            discarded += 1
+            if discarded > self.warmup_frames and time.monotonic() >= deadline:
+                break
         self._cap = cap
         self._seq = 0
 
