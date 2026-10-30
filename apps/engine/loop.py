@@ -170,6 +170,7 @@ class EngineLoop:
         self.debouncer = debouncer or Debouncer(
             MotionGate(motion_threshold=config.motion_threshold),
             settle_frames=config.settle_frames,
+            change_threshold=config.change_threshold or None,
         )
         self._last_heartbeat = time.monotonic()
 

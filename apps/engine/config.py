@@ -68,6 +68,11 @@ class Config:
     # Gate / debounce tuning
     motion_threshold: float = 0.02
     settle_frames: int = 1
+    # How different the settled scene must be from before the motion to count as a
+    # real change. Filters out transient human motion: a hand reaching in scores
+    # higher frame-to-frame than an actual object move, but leaves the scene
+    # unchanged once withdrawn. Defaults to motion_threshold when unset.
+    change_threshold: float = 0.0
 
     # Loop
     heartbeat_minutes: float = 7.0
@@ -99,6 +104,7 @@ class Config:
             escalate_threshold=float(_get("PHANTOM_ESCALATE_THRESHOLD", "0.7")),
             motion_threshold=float(_get("PHANTOM_MOTION_THRESHOLD", "0.02")),
             settle_frames=int(_get("PHANTOM_SETTLE_FRAMES", "1")),
+            change_threshold=float(_get("PHANTOM_CHANGE_THRESHOLD", "0")),
             heartbeat_minutes=float(_get("PHANTOM_HEARTBEAT_MINUTES", "7")),
             db_path=_get("PHANTOM_DB_PATH", "data/phantom.db"),
         )
