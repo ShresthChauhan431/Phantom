@@ -26,6 +26,10 @@ SCHEMA_VERSION = 1
 # other Perception modules can validate against it without re-declaring the literal.
 EventType = Literal["appeared", "moved", "removed", "unchanged", "ambiguous"]
 
+# Backwards-compatible alias: Track B's initial draft named this ``Event``. Keep both
+# names resolving to the same type so neither side's imports break on integration.
+Event = EventType
+
 
 class Delta(BaseModel):
     """A single semantic change observed in the scene.
