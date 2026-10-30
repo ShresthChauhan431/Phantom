@@ -4,11 +4,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from core.memory.store import MemoryStore
+from core.understand.schema.delta import Delta
 from fastapi.testclient import TestClient
 
 from apps.engine.api import create_api
-from core.memory.store import MemoryStore
-from core.understand.schema.delta import Delta
 
 BASE = datetime(2026, 10, 30, 14, 0, 0, tzinfo=timezone.utc)
 
@@ -24,7 +24,9 @@ def _delta(obj, event, to=None, frm=None, conf=0.9, secs=0, frame="buf_1"):
 def client():
     store = MemoryStore(":memory:")
     store.commit_delta(_delta("blue_water_bottle", "appeared", to="on desk", secs=0))
-    store.commit_delta(_delta("blue_water_bottle", "moved", to="behind laptop", secs=180, conf=0.94))
+    store.commit_delta(
+        _delta("blue_water_bottle", "moved", to="behind laptop", secs=180, conf=0.94)
+    )
     store.commit_delta(_delta("glasses", "appeared", to="nightstand", secs=10))
     app = create_api(store)
     yield TestClient(app)
@@ -68,3 +70,19 @@ def test_reveal_payload(client):
 
 def test_reveal_404(client):
     assert client.get("/api/reveal/nope").status_code == 404
+
+
+def test_objects_report_effective_stale_status():
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+    store = MemoryStore(":memory:")
+    store.commit_delta(Delta(object="recent_mug", event="appeared", to="shelf",
+                             confidence=0.9, observed_at=now))
+    store.commit_delta(Delta(object="old_remote", event="appeared", to="couch",
+                             confidence=0.9, observed_at=now - timedelta(minutes=30)))
+    c = TestClient(create_api(store))
+    status = {o["key"]: o["status"] for o in c.get("/api/objects").json()}
+    assert status["recent_mug"] == "fresh"
+    assert status["old_remote"] == "stale"
+    store.close()

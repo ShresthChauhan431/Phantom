@@ -12,23 +12,15 @@ Owned by Track B (Memory & Serving / Shresth).
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from core.geometry import BBox
 from core.memory.models import ObjectRecord, Status
+from core.memory.staleness import age_seconds, effective_status
 
-# After this long without re-observation, a "fresh" record is treated as stale.
-STALE_AFTER = timedelta(minutes=6)
-
-
-class BBox(BaseModel):
-    """Normalized bounding box (0–1) over the reveal frame."""
-
-    x: float
-    y: float
-    w: float
-    h: float
+__all__ = ["BBox", "TrustCard", "RevealPayload", "compose_reveal"]
 
 
 class TrustCard(BaseModel):
@@ -63,14 +55,6 @@ def _humanize_duration(seconds: float) -> str:
     return f"{n} {unit}{'s' if n != 1 else ''}"
 
 
-def _effective_status(record: ObjectRecord, age: float) -> Status:
-    if record.status in ("removed", "ambiguous"):
-        return record.status
-    if age > STALE_AFTER.total_seconds():
-        return "stale"
-    return record.status
-
-
 def _message(record: ObjectRecord, status: Status, age: float) -> str:
     pct = round(record.confidence * 100)
     where = record.location or "unknown location"
@@ -90,14 +74,8 @@ def compose_reveal(
     now: datetime | None = None,
 ) -> RevealPayload:
     """Build the reveal payload for one object record."""
-    now = now or datetime.now(timezone.utc)
-    last_seen = record.last_seen
-    # tolerate naive timestamps by assuming UTC
-    if last_seen.tzinfo is None:
-        last_seen = last_seen.replace(tzinfo=timezone.utc)
-    age = (now - last_seen).total_seconds()
-
-    status = _effective_status(record, age)
+    age = age_seconds(record, now)
+    status = effective_status(record, now)
     card = TrustCard(
         title=record.key.replace("_", " "),
         location=record.location,
@@ -109,6 +87,6 @@ def compose_reveal(
     return RevealPayload(
         key=record.key,
         frame_ref=record.frame_ref,
-        bbox=bbox,
+        bbox=bbox if bbox is not None else record.bbox,
         card=card,
     )

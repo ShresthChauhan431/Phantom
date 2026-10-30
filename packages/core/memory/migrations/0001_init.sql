@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS objects (
     last_seen  TEXT NOT NULL,                -- ISO-8601
     confidence REAL NOT NULL,
     frame_ref  TEXT,
+    bbox       TEXT,                         -- JSON {x,y,w,h} normalized 0..1, nullable
     status     TEXT NOT NULL DEFAULT 'fresh' -- fresh | stale | ambiguous | removed
 );
 

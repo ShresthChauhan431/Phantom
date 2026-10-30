@@ -15,6 +15,7 @@ import threading
 from datetime import datetime
 from pathlib import Path
 
+from core.geometry import BBox
 from core.memory.models import HistoryEntry, ObjectRecord, Status
 from core.understand.schema.delta import Delta
 
@@ -23,6 +24,14 @@ _MIGRATION = Path(__file__).parent / "migrations" / "0001_init.sql"
 
 def _iso(dt: datetime) -> str:
     return dt.isoformat()
+
+
+def _bbox_to_json(bbox: BBox | None) -> str | None:
+    return json.dumps(bbox.model_dump()) if bbox is not None else None
+
+
+def _bbox_from_json(raw: str | None) -> BBox | None:
+    return BBox.model_validate_json(raw) if raw else None
 
 
 class MemoryStore:
@@ -43,7 +52,18 @@ class MemoryStore:
         self._conn.execute("PRAGMA journal_mode=WAL;")
         self._conn.execute("PRAGMA foreign_keys=ON;")
         self._conn.executescript(_MIGRATION.read_text())
+        self._ensure_columns()
         self._conn.commit()
+
+    def _ensure_columns(self) -> None:
+        """Additive, idempotent column backfill for DBs created before a column existed.
+
+        SQLite has no ADD COLUMN IF NOT EXISTS, so we diff against table_info. Keeps
+        older local phantom.db files working after additive schema changes (e.g. bbox).
+        """
+        cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(objects)")}
+        if "bbox" not in cols:
+            self._conn.execute("ALTER TABLE objects ADD COLUMN bbox TEXT")
 
     # ----------------------------------------------------------------- write
     def commit_delta(self, delta: Delta) -> ObjectRecord:
@@ -72,6 +92,7 @@ class MemoryStore:
                     confidence=delta.confidence,
                     frame_ref=delta.frame_ref,
                     status="fresh",
+                    bbox=delta.bbox,
                 )
                 if location is not None:
                     self._append_history(key, location, at, delta.confidence)
@@ -176,17 +197,23 @@ class MemoryStore:
         confidence: float,
         frame_ref: str | None,
         status: Status,
+        bbox: BBox | None = None,
     ) -> None:
         self._conn.execute(
             """
-            INSERT INTO objects (key, location, relations, last_seen, confidence, frame_ref, status)
-            VALUES (:key, :location, :relations, :last_seen, :confidence, :frame_ref, :status)
+            INSERT INTO objects (
+                key, location, relations, last_seen, confidence, frame_ref, bbox, status
+            )
+            VALUES (
+                :key, :location, :relations, :last_seen, :confidence, :frame_ref, :bbox, :status
+            )
             ON CONFLICT(key) DO UPDATE SET
                 location   = excluded.location,
                 relations  = excluded.relations,
                 last_seen  = excluded.last_seen,
                 confidence = excluded.confidence,
                 frame_ref  = excluded.frame_ref,
+                bbox       = excluded.bbox,
                 status     = excluded.status
             """,
             {
@@ -196,6 +223,7 @@ class MemoryStore:
                 "last_seen": last_seen,
                 "confidence": confidence,
                 "frame_ref": frame_ref,
+                "bbox": _bbox_to_json(bbox),
                 "status": status,
             },
         )
@@ -224,6 +252,7 @@ class MemoryStore:
             last_seen=datetime.fromisoformat(row["last_seen"]),
             confidence=row["confidence"],
             frame_ref=row["frame_ref"],
+            bbox=_bbox_from_json(row["bbox"]),
             status=row["status"],
             history=history,
         )

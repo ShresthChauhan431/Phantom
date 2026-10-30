@@ -12,6 +12,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from core.geometry import BBox
+
 Status = Literal["fresh", "stale", "ambiguous", "removed"]
 
 
@@ -32,5 +34,6 @@ class ObjectRecord(BaseModel):
     last_seen: datetime
     confidence: float = Field(ge=0.0, le=1.0)
     frame_ref: str | None = None
+    bbox: BBox | None = None
     status: Status = "fresh"
     history: list[HistoryEntry] = Field(default_factory=list)
