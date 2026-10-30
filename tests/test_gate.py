@@ -188,3 +188,34 @@ def test_explicit_settle_frames_overrides_duration():
 
     config = Config(capture_interval=0.6, settle_seconds=2.0, settle_frames=3)
     assert config.effective_settle_frames == 3
+
+
+# --------------------------------------------- live-stream edge shimmer
+# Measured on the real iPhone stream over a still desk: object outlines flicker by
+# 25-90 grey levels (JPEG + focus/exposure micro-adjustment) while nothing moves,
+# reaching 4.9% of pixels vs the reference — enough to fire the gate and send an
+# unmoved scene to the VLM as a fake "move". A morphological opening erases thin
+# outlines but keeps the solid blob a real move leaves.
+
+
+def _desk_with_outlines(shift: int) -> np.ndarray:
+    img = np.full((480, 640, 3), 200, np.uint8)
+    for i in range(12):  # many object outlines, 2px wide, jittering by `shift`
+        x, y = 30 + i * 50, 60 + (i % 4) * 90
+        cv2.rectangle(img, (x + shift, y), (x + 40 + shift, y + 70), (40, 40, 40), 2)
+    return img
+
+
+def test_opening_removes_edge_shimmer_on_a_still_scene():
+    a = Frame(image=_desk_with_outlines(0), seq=0)
+    b = Frame(image=_desk_with_outlines(1), seq=1)  # outlines shimmer by 1px
+    assert MotionGate(open_ksize=0).score(a, b) > 0.005  # shimmer reads as motion
+    assert MotionGate(open_ksize=9).score(a, b) == 0.0  # and is erased by opening
+
+
+def test_opening_keeps_a_real_object_move():
+    base = _desk_with_outlines(0)
+    moved = base.copy()
+    cv2.rectangle(moved, (300, 200), (380, 300), (30, 90, 200), -1)  # solid object appears
+    score = MotionGate(open_ksize=9).score(Frame(image=base, seq=0), Frame(image=moved, seq=1))
+    assert score > 0.02

@@ -185,7 +185,7 @@ class EngineLoop:
             capacity=config.buffer_capacity, retention_seconds=config.retention_seconds
         )
         self.debouncer = debouncer or Debouncer(
-            MotionGate(motion_threshold=config.motion_threshold),
+            MotionGate(motion_threshold=config.motion_threshold, open_ksize=config.gate_open_ksize),
             settle_frames=config.effective_settle_frames,
             change_threshold=config.change_threshold or None,
         )

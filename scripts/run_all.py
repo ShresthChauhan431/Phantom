@@ -54,11 +54,15 @@ WEB_PORT = 5173
 LIVE_CAMERAS = ("iphone", "android")
 LIVE_VLMS = ("groq", "nvidia", "local")
 
-# Measured on a mounted iPhone over a still desk: quiet frames 0.000-0.005, a real
-# object move 0.025-0.036, a hand passing through 0.114 (filtered as transient).
+# Measured on the mounted iPhone over a still desk. The live stream's edge shimmer
+# (object outlines flickering 25-90 grey levels while nothing moves) reached 4.9%
+# of pixels against the reference frame and produced fake "moves". A 9px opening
+# erases those 1-3px outlines: still-scene drift fell to <=0.0021 while a real
+# object move still scored >=0.0076. Thresholds sit between the two.
 CALIBRATED_DEFAULTS = {
-    "PHANTOM_MOTION_THRESHOLD": "0.01",
-    "PHANTOM_CHANGE_THRESHOLD": "0.015",
+    "PHANTOM_GATE_OPEN_KSIZE": "9",
+    "PHANTOM_MOTION_THRESHOLD": "0.005",
+    "PHANTOM_CHANGE_THRESHOLD": "0.006",
     "PHANTOM_SETTLE_SECONDS": "2",
 }
 

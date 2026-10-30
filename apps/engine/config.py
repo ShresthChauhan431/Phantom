@@ -73,6 +73,9 @@ class Config:
 
     # Gate / debounce tuning
     motion_threshold: float = 0.02
+    # Morphological opening (px) applied to the change mask. Removes the edge
+    # shimmer a compressed live phone stream produces on a still scene; 0 = off.
+    gate_open_ksize: int = 0
     # How long the scene must hold still before a change is considered finished.
     # This is a *duration*, because what matters physically is outlasting a human
     # pause: measured on real footage, a 0.6s window captured a hand hovering
@@ -136,6 +139,7 @@ class Config:
             cloud_model=_get("PHANTOM_CLOUD_MODEL", "qwen/qwen3.8-27b"),
             escalate_threshold=float(_get("PHANTOM_ESCALATE_THRESHOLD", "0.7")),
             motion_threshold=float(_get("PHANTOM_MOTION_THRESHOLD", "0.02")),
+            gate_open_ksize=int(_get("PHANTOM_GATE_OPEN_KSIZE", "0")),
             settle_seconds=float(_get("PHANTOM_SETTLE_SECONDS", "2")),
             settle_frames=int(_get("PHANTOM_SETTLE_FRAMES", "0")),
             change_threshold=float(_get("PHANTOM_CHANGE_THRESHOLD", "0")),
