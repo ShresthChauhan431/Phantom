@@ -78,7 +78,11 @@ def build_camera(config: Config) -> Camera:
     if source == "iphone":
         from core.capture.iphone import IPhoneCamera
 
-        return IPhoneCamera(device_index=config.camera_index, interval=config.capture_interval)
+        return IPhoneCamera(
+            device_index=config.camera_index,
+            interval=config.capture_interval,
+            url=config.camera_url or None,
+        )
     raise ValueError(f"unknown PHANTOM_CAMERA_SOURCE: {config.camera_source!r}")
 
 

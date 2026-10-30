@@ -1,9 +1,19 @@
-"""iPhone capture via Continuity Camera (AVFoundation device).
+"""iPhone capture — two routes, neither requiring a matching Apple ID.
 
-On macOS an iPhone (same Apple ID, nearby or on USB) shows up as a numbered
-AVFoundation camera that OpenCV opens by index — so capture is the generic
-``OpenCVCamera`` with the AVFoundation backend. The only unknown is the index;
-run ``python scripts/list_cameras.py`` to find it, then set ``PHANTOM_CAMERA_INDEX``.
+Continuity Camera is *not* the only way in, and it is unusable when the Mac and the
+iPhone are signed into different Apple IDs (Apple requires the same account; there
+is no override). So this adapter accepts either:
+
+  1. **Virtual camera index** (USB, recommended) — a bridge app such as Camo presents
+     the iPhone to macOS as a normal camera device, so OpenCV opens it by index just
+     like Continuity Camera would. Set ``PHANTOM_CAMERA_INDEX``.
+     Find the index with ``python scripts/list_cameras.py``.
+  2. **Stream URL** (Wi-Fi, no Mac-side driver) — an RTSP/MJPEG camera app on the
+     phone publishes a URL that OpenCV opens directly. Set ``PHANTOM_CAMERA_URL``,
+     e.g. ``rtsp://192.168.1.42:8554/live`` or ``http://192.168.1.42:8080/video``.
+
+Route 2 is the most robust for OpenCV because it avoids macOS virtual-camera
+enumeration entirely; route 1 keeps everything on the cable.
 """
 
 from __future__ import annotations
@@ -16,9 +26,19 @@ from .opencv_camera import OpenCVCamera
 
 
 class IPhoneCamera(OpenCVCamera):
-    """Continuity Camera as a frame source (AVFoundation index on macOS)."""
+    """iPhone as a frame source, via a virtual-camera index or a stream URL."""
 
-    def __init__(self, device_index: int = 0, interval: float = 2.0) -> None:
-        backend = cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else None
-        super().__init__(device_index, interval=interval, backend=backend)
+    def __init__(
+        self,
+        device_index: int = 0,
+        interval: float = 2.0,
+        url: str | None = None,
+    ) -> None:
+        if url:
+            # URLs are decoded by FFMPEG, not AVFoundation — let OpenCV choose.
+            super().__init__(url, interval=interval, backend=None)
+        else:
+            backend = cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else None
+            super().__init__(device_index, interval=interval, backend=backend)
+        self.url = url
         self.device_index = device_index
