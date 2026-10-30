@@ -47,6 +47,11 @@ class Config:
     replay_dir: str = "tests/fixtures/frames"
     camera_index: int = 0  # device index for iphone / usb webcam-bridge
     camera_url: str = ""  # stream URL for android IP-webcam apps
+    # How to capture from an iPhone: "bridge" uses the Swift/AVFoundation helper
+    # (the only path that reaches a Continuity Camera); "index" uses OpenCV by
+    # device index, for a webcam-bridge app such as Camo.
+    iphone_capture: str = "bridge"
+    iphone_unique_id: str = ""  # pin a specific AVFoundation device, optional
 
     # Buffer / retention
     retention_hours: float = 168.0
@@ -82,6 +87,8 @@ class Config:
             replay_dir=_get("PHANTOM_REPLAY_DIR", "tests/fixtures/frames"),
             camera_index=int(_get("PHANTOM_CAMERA_INDEX", "0")),
             camera_url=_get("PHANTOM_CAMERA_URL", ""),
+            iphone_capture=_get("PHANTOM_IPHONE_CAPTURE", "bridge"),
+            iphone_unique_id=_get("PHANTOM_IPHONE_UNIQUE_ID", ""),
             retention_hours=float(_get("PHANTOM_RETENTION_HOURS", "168")),
             buffer_capacity=int(_get("PHANTOM_BUFFER_CAPACITY", "256")),
             vlm_provider=_get("PHANTOM_VLM_PROVIDER", "mock"),

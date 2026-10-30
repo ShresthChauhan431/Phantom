@@ -76,6 +76,17 @@ def build_camera(config: Config) -> Camera:
             interval=config.capture_interval,
         )
     if source == "iphone":
+        # A Continuity Camera is unreachable through OpenCV's index space, so the
+        # Swift/AVFoundation bridge is the default. Use "index" only for a
+        # webcam-bridge app (e.g. Camo) that registers as an ordinary device.
+        if not config.camera_url and config.iphone_capture.lower() != "index":
+            from core.capture.iphone_bridge import IPhoneBridgeCamera
+
+            return IPhoneBridgeCamera(
+                interval=config.capture_interval,
+                unique_id=config.iphone_unique_id or None,
+            )
+
         from core.capture.iphone import IPhoneCamera
 
         return IPhoneCamera(
