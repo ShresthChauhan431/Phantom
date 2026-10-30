@@ -178,11 +178,26 @@ into your branch at least every session and before every PR; new dependency → 
 
 # §E — Your spikes (timeboxed, resolve early)
 
-- **Android USB → frames in Python (macOS).** `scrcpy` 2.x has `--video-source=camera`. Getting
-  those frames into OpenCV on macOS needs a short spike (capture the scrcpy stream/window vs. a
-  camera bridge). Timebox it; if it stalls, keep developing on `replay.py` + fixtures and come
-  back. This is the biggest risk on your track — do it first.
-- **iPhone Continuity Camera** typically shows up as an AVFoundation device OpenCV opens by
-  index — find the index + resolution, confirm it works over USB.
+- **iPhone capture — RESOLVED (Continuity Camera ruled out).** Continuity Camera
+  requires the Mac and iPhone to be signed into the **same Apple ID**
+  ([Apple Support](https://support.apple.com/en-asia/guide/mac-help/mchl77879b8a/14.0/mac/14.0));
+  with different accounts there is no override, and a USB-C cable does not change it
+  (the cable grants data/trust, not the Continuity handshake). Verified on this machine:
+  macOS enumerated only `FaceTime HD Camera`. Two Apple-ID-free routes are implemented
+  in `capture/iphone.py` instead:
+  1. **Bridge app over USB (recommended)** — an app like [Camo](https://camo.com/camera)
+     presents the iPhone to macOS as a normal camera device; OpenCV opens it by index.
+     `python scripts/list_cameras.py` → `PHANTOM_CAMERA_INDEX=<index>`.
+  2. **Stream URL over Wi-Fi (no Mac-side driver)** — an RTSP/MJPEG camera app on the
+     phone publishes a URL OpenCV opens directly: `PHANTOM_CAMERA_URL=rtsp://…`.
+     Most robust for OpenCV since it skips virtual-camera enumeration entirely.
+  The real capture code path (`OpenCVCamera`, which `IPhoneCamera` subclasses) is
+  **verified against live hardware**: opened an AVFoundation device and pulled
+  sequential 1280x720 frames with advancing seq/timestamps.
+- **Android USB → frames in Python (macOS).** Same two routes, in `capture/android.py`:
+  an IP-webcam app's stream URL (`PHANTOM_CAMERA_URL`) or a USB webcam-bridge index
+  (`PHANTOM_CAMERA_INDEX`). `scripts/setup_android.sh` covers the adb/scrcpy preflight.
+  scrcpy's `--video-source=camera` can't pipe frames into Python directly on macOS, so
+  the bridge/stream routes replace it.
 - **VLM pick for the demo**: choose primary (NVIDIA / Groq / Ollama qwen2.5-vl), keep `mock` for
   offline dev, keep one as the `<0.7` escalation target. Get the API key into `.env` with Shresth.
