@@ -19,6 +19,7 @@ written to disk.
 from __future__ import annotations
 
 import logging
+import re
 import struct
 import subprocess
 import threading
@@ -35,6 +36,7 @@ log = logging.getLogger("phantom.capture.iphone_bridge")
 
 _SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "iphone_stream.swift"
 _HEADER = 4  # bytes, big-endian frame length
+_DEVICE_LINE = re.compile(r"device:\s*(.+?)\s*\[([^\]]+)\]")
 
 
 class IPhoneBridgeCamera:
@@ -71,8 +73,13 @@ class IPhoneBridgeCamera:
         self._lock = threading.Lock()
         self._latest: np.ndarray | None = None
         self._frames_seen = 0
+        self._last_frame_at: float | None = None
         self._seq = 0
         self._stderr: list[str] = []
+        #: Name/id of the AVFoundation device actually opened, as reported by the
+        #: helper. Lets callers state which camera is live instead of assuming.
+        self.device_name: str | None = None
+        self.device_id: str | None = None
 
     # ---------------------------------------------------------------- lifecycle
     def open(self) -> None:
@@ -200,6 +207,7 @@ class IPhoneBridgeCamera:
             with self._lock:
                 self._latest = image
                 self._frames_seen += 1
+                self._last_frame_at = time.monotonic()
 
     def _drain_stderr(self) -> None:
         proc = self._proc
@@ -211,4 +219,23 @@ class IPhoneBridgeCamera:
             line = raw.decode("utf-8", "replace").strip()
             if line:
                 self._stderr.append(line)
+                del self._stderr[:-50]  # bounded: this runs for the life of the engine
+                # The helper announces the AVFoundation device it opened, e.g.
+                # "[iphone_stream] device: Devansh’s iPhone Camera [1972EF6F-...]".
+                found = _DEVICE_LINE.search(line)
+                if found:
+                    self.device_name = found.group(1).strip()
+                    self.device_id = found.group(2).strip()
+                    log.info("iPhone bridge opened device: %s", self.device_name)
                 log.debug("iphone_stream: %s", line)
+
+    # -------------------------------------------------------------- telemetry
+    @property
+    def frames_seen(self) -> int:
+        """Frames decoded since open — proof the camera is really streaming."""
+        return self._frames_seen
+
+    @property
+    def last_frame_at(self) -> float | None:
+        """``time.monotonic()`` of the newest decoded frame, or None."""
+        return self._last_frame_at

@@ -1,0 +1,38 @@
+You are Phantom's perception core. List every distinct, movable physical object
+that is clearly visible in the attached image of a desk or table scene.
+
+KNOWN OBJECTS (already in memory). When you see one of these same objects, reuse
+its exact key instead of inventing a new name:
+{known_json}
+
+Reply with EXACTLY ONE JSON object, no prose, no markdown fences:
+
+{{
+  "objects": [
+    {{
+      "object": "<lowercase_snake_case_name>",
+      "location": "<where it is, described relative to nearby objects or the surface>",
+      "relations": ["<spatial context>", "..."],
+      "confidence": <0.0-1.0>,
+      "bbox": {{"x": <0.0-1.0>, "y": <0.0-1.0>, "w": <0.0-1.0>, "h": <0.0-1.0>}}
+    }}
+  ]
+}}
+
+Rules:
+- Only list objects you can actually see. NEVER invent or guess objects.
+- Ignore people, hands and body parts. They are not objects.
+- Ignore fixed surfaces and structure: the desk or table itself, walls, floor.
+- "object" MUST be lowercase snake_case and specific enough to tell items apart
+  (e.g. "black_laptop", "white_coffee_mug", "blue_water_bottle").
+- "location" is a short human phrase, e.g. "left of the laptop, near the edge".
+- "relations" is spatial context ("left of monitor", "on desk"); may be [].
+- "confidence" reflects how sure you are that the object is there and correctly named.
+- "bbox" is the object's bounding box as fractions of image width/height with the
+  origin at the TOP-LEFT: "x","y" = top-left corner, "w","h" = size, all 0.0-1.0.
+  Use null if you cannot localize it.
+- At most 12 objects, the most prominent first.
+- Do NOT include any timestamp or date.
+- If no movable objects are visible, reply {{"objects": []}}.
+
+Reply with ONLY the JSON object.

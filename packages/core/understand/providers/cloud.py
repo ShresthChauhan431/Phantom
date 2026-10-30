@@ -1,20 +1,26 @@
-"""Cloud VLM provider — OpenAI-compatible escalation target.
+"""Cloud VLM provider — OpenAI-compatible (Groq, NVIDIA).
 
-Used only when the local model is unsure (``confidence < 0.7``, ADR-0002). NVIDIA
-and Groq both expose OpenAI-compatible chat endpoints, so a single client covers
-``PHANTOM_VLM_PROVIDER=nvidia|groq`` by swapping ``base_url`` + ``model``. Like
-``local.py``, this is one of the only modules permitted to call a model directly.
+NVIDIA and Groq both expose OpenAI-compatible chat endpoints, so a single client
+covers ``PHANTOM_VLM_PROVIDER=nvidia|groq`` by swapping ``base_url`` + ``model``.
+Like ``local.py``, this is one of the only modules permitted to call a model.
+
+Two questions are asked of the model:
+  * ``whats_changed`` — after a settled change: what is the single change?
+  * ``scan_scene``    — at startup and on heartbeat: what is visible right now?
 """
 
 from __future__ import annotations
 
 import base64
+from datetime import datetime
 from pathlib import Path
 
 from ..schema.delta import Delta
-from .base import ProviderError, parse_delta_json
+from .base import ProviderError, parse_delta_json, parse_inventory_json
 
-_PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "delta.txt"
+_PROMPTS = Path(__file__).resolve().parent.parent / "prompts"
+_PROMPT_PATH = _PROMPTS / "delta.txt"
+_INVENTORY_PATH = _PROMPTS / "inventory.txt"
 
 # Convenience base URLs for the common OpenAI-compatible vision backends.
 KNOWN_BASE_URLS = {
@@ -50,6 +56,8 @@ class CloudProvider:
         base_url: str | None = None,
         name: str = "cloud",
         prompt_template: str | None = None,
+        inventory_template: str | None = None,
+        timeout: float = 45.0,
     ) -> None:
         if not api_key:
             raise ProviderError("cloud provider requires an API key")
@@ -58,6 +66,10 @@ class CloudProvider:
         self._api_key = api_key
         self._base_url = base_url
         self._prompt_template = prompt_template or _load_prompt()
+        self._inventory_template = inventory_template or _INVENTORY_PATH.read_text(
+            encoding="utf-8"
+        )
+        self._timeout = timeout
         self._client = None  # lazy
 
     def _ensure_client(self):
@@ -66,15 +78,15 @@ class CloudProvider:
                 from openai import OpenAI
             except ImportError as exc:  # pragma: no cover - environment dependent
                 raise ProviderError("openai package is not installed") from exc
-            kwargs = {"api_key": self._api_key}
+            kwargs = {"api_key": self._api_key, "timeout": self._timeout}
             if self._base_url:
                 kwargs["base_url"] = self._base_url
             self._client = OpenAI(**kwargs)
         return self._client
 
-    def whats_changed(self, prev_state_json: str, frame_ref: str, image_bytes: bytes) -> Delta:
+    def _complete(self, prompt: str, image_bytes: bytes) -> str:
+        """One strict-JSON chat completion over a single image."""
         client = self._ensure_client()
-        prompt = self._prompt_template.format(prev_state_json=prev_state_json)
         image_b64 = base64.b64encode(image_bytes).decode("ascii")
         mime = _image_mime(image_bytes)
         try:
@@ -97,5 +109,20 @@ class CloudProvider:
             )
         except Exception as exc:  # network / API errors -> uniform provider error
             raise ProviderError(f"cloud chat failed: {exc}") from exc
-        content = resp.choices[0].message.content or ""
-        return parse_delta_json(content, frame_ref=frame_ref)
+        return resp.choices[0].message.content or ""
+
+    def whats_changed(self, prev_state_json: str, frame_ref: str, image_bytes: bytes) -> Delta:
+        prompt = self._prompt_template.format(prev_state_json=prev_state_json)
+        return parse_delta_json(self._complete(prompt, image_bytes), frame_ref=frame_ref)
+
+    def scan_scene(
+        self,
+        known_json: str,
+        frame_ref: str,
+        image_bytes: bytes,
+        observed_at: datetime | None = None,
+    ) -> list[Delta]:
+        prompt = self._inventory_template.format(known_json=known_json)
+        return parse_inventory_json(
+            self._complete(prompt, image_bytes), frame_ref=frame_ref, observed_at=observed_at
+        )

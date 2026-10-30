@@ -18,6 +18,7 @@ ambiguous path is already wired for when real cross-checks arrive.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Callable
 from datetime import datetime
@@ -122,3 +123,45 @@ class UnderstandService:
             delta = delta.model_copy(update={"observed_at": observed_at})
 
         return delta
+
+    def scan_scene(
+        self,
+        known_keys: list[str],
+        frame_ref: str,
+        image_bytes: bytes,
+        observed_at: datetime | None = None,
+        *,
+        min_confidence: float = 0.5,
+    ) -> list[Delta]:
+        """Ask the VLM what is visible right now; one Delta per object.
+
+        Used at startup, so memory holds what the camera actually sees before
+        anything moves, and on heartbeat, so ``last_seen`` only advances for
+        objects the model genuinely re-observed. Known keys are passed in so the
+        model reuses them for the same physical object instead of renaming it.
+
+        Entries below ``min_confidence`` are dropped: a scene listing is where a
+        model is most tempted to pad with guesses. Duplicate keys keep the most
+        confident entry.
+
+        Raises:
+            ProviderError: if the provider cannot scan or its reply is unusable.
+        """
+        scan = getattr(self.provider, "scan_scene", None)
+        if scan is None:
+            raise ProviderError(f"provider {self.provider.name!r} cannot scan a scene")
+
+        known_json = json.dumps(sorted(known_keys))
+        raw = scan(known_json, frame_ref, image_bytes, observed_at)
+
+        best: dict[str, Delta] = {}
+        for delta in raw:
+            delta = normalize_delta(delta)
+            if not delta.object or delta.confidence < min_confidence:
+                continue
+            if observed_at is not None:
+                delta = delta.model_copy(update={"observed_at": observed_at})
+            current = best.get(delta.object)
+            if current is None or delta.confidence > current.confidence:
+                best[delta.object] = delta
+        return list(best.values())

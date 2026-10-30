@@ -61,6 +61,7 @@ class MotionGate:
         self.pixel_delta = pixel_delta
         self.blur_ksize = blur_ksize
         self.open_ksize = open_ksize
+        self.last_score = 0.0
 
     def _prep(self, image: np.ndarray) -> np.ndarray:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -82,7 +83,11 @@ class MotionGate:
             )
             mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         changed = int(np.count_nonzero(mask))
-        return changed / mask.size
+        result = changed / mask.size
+        # Kept for telemetry: the score the gate actually decided on, so the UI can
+        # show the engine's real motion reading rather than recomputing its own.
+        self.last_score = result
+        return result
 
     def compare(self, prev: Frame, curr: Frame) -> MotionResult:
         s = self.score(prev, curr)

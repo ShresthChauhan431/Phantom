@@ -22,6 +22,8 @@ EXACTLY ONE JSON object, no prose, no markdown fences, matching this schema:
 Rules:
 - Do NOT include any timestamp or date. You cannot know the current time; the
   system records when the frame was captured.
+- Ignore people, hands and body parts. They are not objects; report what they
+  left behind or moved, never the person.
 - "object" MUST be lowercase snake_case (e.g. "blue_water_bottle", "car_keys").
 - "appeared": object is newly present -> "from" is null.
 - "moved": object was known and is now elsewhere -> both "from" and "to" set.
