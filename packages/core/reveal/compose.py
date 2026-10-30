@@ -56,14 +56,27 @@ def _humanize_duration(seconds: float) -> str:
 
 
 def _message(record: ObjectRecord, status: Status, age: float) -> str:
+    """Human-facing line for the trust card.
+
+    Every status carries both *when* and *how sure* — the trust contract in
+    vision.md §Reveal is "always shows timestamp + confidence, never bare
+    certainty". A stale or removed card is exactly where an unqualified claim is
+    most misleading, so confidence appears there too, not just on fresh answers.
+    """
     pct = round(record.confidence * 100)
     where = record.location or "unknown location"
     if status == "removed":
-        return f"No longer observed — last seen {where} ({_humanize_duration(age)} ago)."
+        return (
+            f"No longer observed — last seen {where} "
+            f"({_humanize_duration(age)} ago), {pct}% confidence at the time."
+        )
     if status == "ambiguous":
         return f"Ambiguous — best guess {where}, {pct}% confidence. Not re-observed cleanly."
     if status == "stale":
-        return f"Not re-observed for {_humanize_duration(age)} — possibly occluded. Last: {where}."
+        return (
+            f"Not re-observed for {_humanize_duration(age)} — possibly occluded. "
+            f"Last: {where}, {pct}% confidence when seen."
+        )
     return f"Last seen {_humanize_duration(age)} ago — {where} — {pct}% confidence."
 
 
