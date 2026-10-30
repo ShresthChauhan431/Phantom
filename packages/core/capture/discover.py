@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 
 import cv2
@@ -28,6 +29,22 @@ def _backend() -> int | None:
     return cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else None
 
 
+def _first_good_frame(cap: cv2.VideoCapture, attempts: int = 15, pause: float = 0.1):
+    """Read until the device actually delivers a frame, or give up.
+
+    A freshly opened AVFoundation device is not streaming yet, so the first
+    ``read()`` routinely fails even though the camera is perfectly usable — a
+    Continuity Camera is especially slow to start. Concluding "unopenable" from a
+    single failed read reports a working camera as missing, so retry briefly.
+    """
+    for _ in range(attempts):
+        ok, frame = cap.read()
+        if ok and frame is not None:
+            return frame
+        time.sleep(pause)
+    return None
+
+
 def list_cameras(max_index: int = 8) -> list[CameraInfo]:
     """Return info for every openable camera index in ``[0, max_index)``."""
     backend = _backend()
@@ -36,8 +53,8 @@ def list_cameras(max_index: int = 8) -> list[CameraInfo]:
         cap = cv2.VideoCapture(index, backend) if backend is not None else cv2.VideoCapture(index)
         try:
             if cap.isOpened():
-                ok, frame = cap.read()
-                if ok and frame is not None:
+                frame = _first_good_frame(cap)
+                if frame is not None:
                     h, w = frame.shape[:2]
                     found.append(CameraInfo(index=index, width=w, height=h))
         finally:
