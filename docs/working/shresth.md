@@ -177,8 +177,8 @@ git checkout ShresthBranch && git merge main  # bring trunk in
 # work, commit often (Conventional Commits), then:
 git push                                      # PR → main when a unit is done + tested
 ```
-
+<!--
 Rules: touch only your directories; announce + isolate + solo-commit any co-owned file edit;
 contract changes go through `shared-contracts.md` + both dev docs in one commit; merge `main`
 into your branch at least every session and before every PR; new dependency → edit
-`pyproject.toml` alone, ping Dhwanit to reinstall.
+`pyproject.toml` alone, ping Dhwanit to reinstall.-->

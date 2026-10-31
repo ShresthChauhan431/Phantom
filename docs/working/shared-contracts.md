@@ -1,4 +1,4 @@
-# Phantom — Shared Contracts & Conflict Rules (SOURCE OF TRUTH)
+<!--# Phantom — Shared Contracts & Conflict Rules (SOURCE OF TRUTH)
 
 > Read this first. Both developers depend on this file. The same contract section is
 > copied into `shresth.md` and `dhwanit.md` so neither of you can miss it. **If anything
@@ -260,4 +260,4 @@ PHANTOM_DB_PATH=data/phantom.db
 PHANTOM_CAMERA_SOURCE=android     # android | iphone | replay   (NO webcam)
 PHANTOM_CAPTURE_INTERVAL=2
 PHANTOM_RETENTION_HOURS=168
-```
+```-->
