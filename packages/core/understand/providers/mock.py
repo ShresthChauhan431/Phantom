@@ -28,6 +28,7 @@ class MockProvider:
         *,
         factory: DeltaFactory | None = None,
         cycle: bool = False,
+        scene: Sequence[Delta] | None = None,
     ) -> None:
         if deltas is None and factory is None:
             # Default: a single believable "bottle appeared" delta.
@@ -44,6 +45,7 @@ class MockProvider:
         self._deltas = list(deltas or [])
         self._factory = factory
         self._cycle = cycle
+        self._scene = list(scene or [])
         self._i = 0
 
     def whats_changed(self, prev_state_json: str, frame_ref: str, image_bytes: bytes) -> Delta:
@@ -60,3 +62,17 @@ class MockProvider:
         if not delta.frame_ref:
             delta = delta.model_copy(update={"frame_ref": frame_ref})
         return delta
+
+    def scan_scene(
+        self,
+        known_json: str,
+        frame_ref: str,
+        image_bytes: bytes,
+        observed_at: datetime | None = None,
+    ) -> list[Delta]:
+        """Canned inventory for tests: the configured ``scene`` list, or nothing."""
+        stamp = observed_at or datetime.now(timezone.utc)
+        return [
+            d.model_copy(update={"frame_ref": frame_ref, "observed_at": stamp})
+            for d in self._scene
+        ]

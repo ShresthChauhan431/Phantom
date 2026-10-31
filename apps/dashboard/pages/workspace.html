@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F3F0EE">
+  <meta name="description" content="PHANTOM Table Workspace — live spatial memory from the phone camera, the detection engine and the VLM.">
+  <title>PHANTOM — Table Workspace (Live)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/workspace.css?v=2.0.0">
+  <link rel="stylesheet" href="/src/css/workspace-live.css?v=1.0.0">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <!--
+    Every value on this page comes from the running engine (/api). Nothing below is
+    pre-filled: empty containers are populated by workspace.js from live data, and
+    show an explicit "nothing yet" state until the engine reports something.
+  -->
+  <header class="workspace-header-pill">
+    <div class="workspace-header-inner">
+      <div class="workspace-header-left">
+        <a href="/pages/phantom.html" class="wordmark" aria-label="PHANTOM Architecture Home">
+          <span>PHANTOM</span><span class="wordmark-period">.</span>
+        </a>
+        <span class="workspace-badge">TABLE WORKSPACE</span>
+        <span class="ws-source-badge" id="engineSourceBadge">Connecting to engine…</span>
+      </div>
+
+      <div class="workspace-header-center">
+        <div class="hud-status-pill" id="hudPill" title="Engine state">
+          <span class="hud-dot" id="hudDot"></span>
+          <span id="hudText">CONNECTING</span>
+        </div>
+      </div>
+
+      <div class="workspace-header-right">
+        <button class="btn-pill-primary" type="button" id="btnHeaderAction">
+          <span>● Start Monitoring</span>
+        </button>
+        <a href="/pages/phantom.html" class="btn-pill-quiet" id="btnReturnToArch">
+          <span>← Architecture</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace-nav-outer">
+    <div class="workspace-nav-container">
+      <nav class="workspace-tabs-bar" aria-label="Workspace Views">
+        <button class="tab-btn is-active" type="button" data-tab="overview"><span class="tab-num">01</span><span>Overview</span></button>
+        <button class="tab-btn" type="button" data-tab="monitor"><span class="tab-num">02</span><span>Live Monitor</span></button>
+        <button class="tab-btn" type="button" data-tab="objects"><span class="tab-num">03</span><span>Objects</span></button>
+        <button class="tab-btn" type="button" data-tab="activity"><span class="tab-num">04</span><span>History</span></button>
+        <button class="tab-btn" type="button" data-tab="search"><span class="tab-num">05</span><span>Search</span></button>
+        <button class="tab-btn" type="button" data-tab="engine"><span class="tab-num">06</span><span>Engine</span></button>
+      </nav>
+    </div>
+  </div>
+
+  <main class="workspace-content">
+    <!-- ================================================================ OVERVIEW -->
+    <section class="workspace-view is-active" data-view="overview" id="viewOverview">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow"><span class="dot"></span><span>LIVE · PHONE CAMERA → MOTION GATE → VLM → MEMORY</span></div>
+        <h1 class="view-title">Your desk <em>remembers.</em></h1>
+        <p class="view-subtitle">
+          The engine watches the phone camera continuously. When something on the desk settles in a new place, a vision-language model describes what changed and the result is committed to memory. Everything below is what it has actually seen this session.
+        </p>
+      </header>
+
+      <div class="overview-ledger-split">
+        <div class="desk-state-panel">
+          <div class="desk-state-header">
+            <div class="panel-title-wrap">
+              <h2>What the camera sees</h2>
+              <p id="sceneSummary">Waiting for the engine…</p>
+            </div>
+            <button class="btn-pill-quiet" type="button" id="btnLaunchMonitorQuick" style="font-size: 12.5px; border: 1px solid var(--line-border);">
+              <span>Live View →</span>
+            </button>
+          </div>
+
+          <div class="desk-anchors-row">
+            <div class="anchors-title">Pipeline</div>
+            <div class="anchors-pills" id="pipelineChips"></div>
+          </div>
+
+          <div class="anchors-title">Objects in memory</div>
+          <div class="desk-snapshot-list" id="deskSnapshotList"></div>
+
+          <div class="desk-state-actions">
+            <button class="btn-pill-primary" type="button" id="btnStartMonitoring">
+              <span id="btnStartMonitoringLabel">Start Monitoring</span>
+            </button>
+            <span style="font-size: 13px; color: var(--slate-gray);" id="overviewCameraStatusText">Live preview off</span>
+          </div>
+        </div>
+
+        <div class="movement-stream-panel">
+          <div class="stream-panel-header">
+            <div class="panel-title-wrap">
+              <h2>Latest triggers</h2>
+              <p>VLM results committed by the engine</p>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--signal-orange);" id="statsRecentChangesBadge">—</span>
+          </div>
+          <ul class="recent-events-list" id="recentEventsOverview"></ul>
+        </div>
+      </div>
+
+      <div class="overview-search-ribbon">
+        <div class="overview-search-input-wrap">
+          <input type="text" id="quickSearchInput" class="overview-search-input" placeholder="Search memory by keyword, e.g. a name the engine has detected"/>
+        </div>
+        <button class="btn-pill-primary" type="button" id="btnQuickSearchTrigger" data-endpoint="query">
+          <span>Search Memory →</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================================ LIVE MONITOR -->
+    <section class="workspace-view" data-view="monitor" id="viewMonitor">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow"><span class="dot"></span><span>STAGE 1 MOTION GATE · STAGE 2 VLM UNDERSTANDING</span></div>
+        <h1 class="view-title">Live table <em>observation.</em></h1>
+        <p class="view-subtitle" id="monitorSubtitle">
+          The engine compares every frame with the last. When motion stops and the scene stays different from before, that settled frame is sent to the VLM.
+        </p>
+      </header>
+
+      <div class="live-monitor-stage-layout">
+        <div class="viewfinder-card">
+          <div class="viewfinder-chrome-top">
+            <div class="viewfinder-chrome-left">
+              <span class="viewfinder-indicator"></span>
+              <span>PHANTOM REALITY EYE · TABLE OBSERVATION</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 11px;">
+              <span id="runtimeModelBadge">VLM: —</span>
+            </div>
+          </div>
+
+          <div class="viewfinder-screen">
+            <video id="cameraVideo" autoplay playsinline muted></video>
+            <canvas id="overlayCanvas"></canvas>
+            <div class="ws-vf-placeholder" id="viewfinderPlaceholder">
+              <strong>Live preview is off</strong>
+              <span>Press <em>Start Monitoring</em> to show the iPhone camera. The engine is watching either way.</span>
+            </div>
+
+            <div class="viewfinder-reticle reticle-tl" aria-hidden="true"></div>
+            <div class="viewfinder-reticle reticle-tr" aria-hidden="true"></div>
+            <div class="viewfinder-reticle reticle-bl" aria-hidden="true"></div>
+            <div class="viewfinder-reticle reticle-br" aria-hidden="true"></div>
+
+            <div class="viewfinder-hud-overlay">
+              <div class="viewfinder-hud-pill"><span id="cameraResolutionHud">PREVIEW OFF</span></div>
+              <div class="viewfinder-motion-meter" title="The engine gate's own motion score for the latest frame">
+                <span style="font-weight: 600;">ENGINE GATE:</span>
+                <div class="motion-meter-track"><div class="motion-meter-bar-fill" id="motionMeterFill"></div></div>
+                <span id="motionMeterText">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="viewfinder-controls-bottom">
+            <div class="controls-group">
+              <select id="cameraSourceSelect" class="vf-select" aria-label="Preview camera">
+                <option value="">Detecting cameras…</option>
+              </select>
+              <select id="resolutionSelect" class="vf-select" aria-label="Preview resolution">
+                <option value="1920x1080" selected>1080p preview</option>
+                <option value="1280x720">720p preview</option>
+              </select>
+            </div>
+            <div class="controls-group">
+              <button class="btn-vf-tool" type="button" id="btnSyncNow" data-endpoint="engine"><span>↻ Sync now</span></button>
+              <button class="btn-vf-tool is-active" type="button" id="btnToggleBoxes"><span>Bounding Boxes</span></button>
+            </div>
+          </div>
+          <div class="ws-status-line" id="engineStatusDetail">Connecting to the engine…</div>
+        </div>
+
+        <aside class="monitor-sidebar-stack">
+          <div class="monitor-panel">
+            <div class="monitor-panel-header">
+              <h2 class="monitor-panel-title">In memory now</h2>
+              <span style="font-family: var(--font-mono); font-size: 10.5px; color: var(--signal-orange);" id="activeDetectionsCount">—</span>
+            </div>
+            <div class="matrix-list" id="activeDetectionsList"></div>
+          </div>
+
+          <div class="monitor-panel">
+            <div class="monitor-panel-header">
+              <h2 class="monitor-panel-title">Engine telemetry</h2>
+              <span style="font-family: var(--font-mono); font-size: 10.5px; color: var(--signal-orange);">LIVE</span>
+            </div>
+            <div class="matrix-list" id="engineTelemetryList"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================================================================= OBJECTS -->
+    <section class="workspace-view" data-view="objects" id="viewObjects">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow"><span class="dot"></span><span>SPATIAL MEMORY · ONE RECORD PER OBJECT</span></div>
+        <h1 class="view-title">Tracked everyday <em>objects.</em></h1>
+        <p class="view-subtitle">
+          Each object the VLM has described, with where it was last seen, its spatial relations, the model's confidence and the screenshot it was seen in. Select one for its full movement history.
+        </p>
+      </header>
+
+      <div class="objects-toolbar-row">
+        <div class="category-filter-chips" id="categoryChips">
+          <button class="filter-chip is-active" type="button" data-category="all">All Objects</button>
+          <button class="filter-chip" type="button" data-category="electronics">Electronics</button>
+          <button class="filter-chip" type="button" data-category="personal">Personal</button>
+          <button class="filter-chip" type="button" data-category="hydration">Cups &amp; Bottles</button>
+          <button class="filter-chip" type="button" data-category="stationery">Stationery</button>
+          <button class="filter-chip" type="button" data-category="other">Other</button>
+        </div>
+        <span style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);" id="objectsRegistryCount">—</span>
+      </div>
+
+      <div class="objects-registry-table">
+        <div class="registry-table-header">
+          <span>Physical Object</span>
+          <span>Location / Relations (VLM)</span>
+          <span>Last Observed</span>
+          <span>Model Confidence</span>
+          <span style="text-align: right;">Action</span>
+        </div>
+        <div class="registry-table-rows" id="objectsRegistryRows"></div>
+      </div>
+    </section>
+
+    <!-- ================================================================= HISTORY -->
+    <section class="workspace-view" data-view="activity" id="viewActivity">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow"><span class="dot"></span><span>TRIGGER LOG · LAST 5 MINUTES</span></div>
+        <h1 class="view-title">Recent <em>triggers.</em></h1>
+        <p class="view-subtitle">
+          Every result the VLM produced and the engine committed in the last five minutes: the scene scans and each settled change, with where the object went, the model's confidence and the screenshot. Older triggers drop out automatically.
+        </p>
+      </header>
+
+      <div class="activity-ledger-wrap">
+        <div class="activity-filter-bar">
+          <div class="category-filter-chips">
+            <button class="filter-chip is-active" type="button" data-event="all">All</button>
+            <button class="filter-chip" type="button" data-event="moved">Moved</button>
+            <button class="filter-chip" type="button" data-event="appeared">Appeared</button>
+            <button class="filter-chip" type="button" data-event="removed">Removed</button>
+            <button class="filter-chip" type="button" data-event="unchanged">Re-seen</button>
+            <button class="filter-chip" type="button" data-event="ambiguous">Ambiguous</button>
+          </div>
+          <input type="search" id="historyFilterInput" class="ws-history-search" placeholder="Filter by keyword…" aria-label="Filter history by keyword"/>
+        </div>
+        <div class="ws-window-note" id="historyWindowNote">—</div>
+        <ul class="timeline-chronological-list" id="timelineList"></ul>
+      </div>
+    </section>
+
+    <!-- ================================================================== SEARCH -->
+    <section class="workspace-view" data-view="search" id="viewSearch">
+      <header class="view-editorial-header" style="text-align: center; max-width: 680px; margin: 0 auto 36px;">
+        <div class="view-eyebrow" style="justify-content: center;"><span class="dot"></span><span>SEARCH SPATIAL MEMORY</span></div>
+        <h1 class="view-title">Search physical <em>memory.</em></h1>
+        <p class="view-subtitle" style="margin: 0 auto;">
+          Type a keyword like an object's name or colour, or a question like "where is my phone?". Answers come from what the engine has actually recorded, with the screenshot it was last seen in.
+        </p>
+      </header>
+
+      <div class="search-center-stage">
+        <div class="search-field-shell">
+          <input type="text" id="searchInput" class="search-field-input" placeholder="Search by keyword or question"/>
+          <button class="btn-search-go" type="button" id="btnSearch" aria-label="Search" data-endpoint="query"><span>→</span></button>
+        </div>
+        <div class="search-suggestions-row" id="searchSuggestions"></div>
+        <div id="searchResultContainer"></div>
+      </div>
+    </section>
+
+    <!-- ================================================================== ENGINE -->
+    <section class="workspace-view" data-view="engine" id="viewEngine">
+      <header class="view-editorial-header">
+        <div class="view-eyebrow"><span class="dot"></span><span>ENGINE CONFIGURATION &amp; DATA HANDLING</span></div>
+        <h1 class="view-title">Engine <em>status.</em></h1>
+        <p class="view-subtitle">
+          The running engine's actual configuration and counters, reported by the engine itself.
+        </p>
+      </header>
+
+      <div class="settings-section-card">
+        <div class="settings-card-header">
+          <h2>Pipeline</h2>
+          <p>Live values from <code>GET /api/engine</code>.</p>
+        </div>
+        <div id="engineConfigRows"></div>
+      </div>
+
+      <div class="settings-section-card">
+        <div class="settings-card-header">
+          <h2>Where data goes</h2>
+          <p>What leaves this machine, and what does not.</p>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Live video</strong>
+            <p>The camera stream is processed on this Mac. Video is never recorded, written to disk or uploaded.</p>
+          </div>
+          <span class="ws-fact">LOCAL ONLY</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Frames sent to the VLM</strong>
+            <p id="vlmDataFlow">Only settled frames (after a real change, and for the periodic scene scan) are sent to the configured VLM provider as JPEG.</p>
+          </div>
+          <span class="ws-fact" id="vlmDataFlowBadge">—</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Screenshots</strong>
+            <p>Held in the engine's RAM ring buffer, never on disk. They disappear when the engine stops or the buffer rotates.</p>
+          </div>
+          <span class="ws-fact">RAM ONLY</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Memory</strong>
+            <p>Object records live in the engine's SQLite file. Each <code>run_all.py</code> session starts empty; the previous one is kept as <code>data/live.prev.db</code>.</p>
+          </div>
+          <span class="ws-fact" id="memoryFactBadge">—</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <strong>Cached screenshots in this browser</strong>
+            <p>Clears this tab's copies only. The engine's memory is read-only from the page.</p>
+          </div>
+          <button class="btn-pill-quiet" type="button" id="btnPurgeFrames" style="border: 1px solid var(--line-border);">
+            <span>Clear browser cache</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true">
+    <aside class="drawer-panel" id="drawerPanel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <div class="drawer-header">
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--signal-orange); margin-bottom: 4px;" id="drawerCategory"></div>
+          <h2 style="font-family: var(--font-display); font-size: 28px; margin: 0; color: var(--ink-black);" id="drawerTitle"></h2>
+          <p style="font-size: 13.5px; color: var(--slate-gray); margin: 4px 0 0;" id="drawerSubtitle"></p>
+        </div>
+        <button class="drawer-close-btn" type="button" id="drawerCloseBtn" aria-label="Close Drawer">✕</button>
+      </div>
+      <div class="drawer-body" id="drawerBody"></div>
+    </aside>
+  </div>
+
+  <!-- Live engine client (the page's only data source), then the controller. -->
+  <script src="/src/js/engine/backend-engine.js?v=2.0.0"></script>
+  <script src="/src/js/experiences/workspace.js?v=3.0.0"></script>
+  <script type="module" src="/src/api/inspector.js"></script>
+</body>
+</html>

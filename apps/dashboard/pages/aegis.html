@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F3F0EE">
+  <meta name="description" content="AEGIS — Clinical Intelligence & Surgical Tray Verification powered by PHANTOM.">
+  <title>AEGIS — Clinical Intelligence & Spatial Verification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/module-shared.css?v=2.0.0">
+  <style>
+    :root {
+      --module-accent: #0284C7;
+      --module-accent-light: #38BDF8;
+      --module-accent-rgb: 2, 132, 199;
+    }
+  </style>
+</head>
+<body data-module="aegis">
+  <!-- Top Floating Pill Header (SMRITI Benchmark) -->
+  <header class="module-site-header">
+    <div class="module-header-inner">
+      <div class="module-header-left">
+        <a href="/pages/phantom.html" class="module-brand">
+          <span>PHANTOM</span>
+          <span class="module-brand-sep">/</span>
+          <span class="module-brand-name">AEGIS</span>
+        </a>
+        <span class="module-domain-badge">03 · CLINICAL</span>
+      </div>
+
+      <div class="module-header-center">
+        <nav class="module-nav-pills" aria-label="Ecosystem Switcher">
+          <a href="/pages/smriti.html" class="module-nav-link">01 SMRITI</a>
+          <a href="/pages/lumen.html" class="module-nav-link">02 LUMEN</a>
+          <a href="/pages/aegis.html" class="module-nav-link is-active">03 AEGIS</a>
+          <a href="/pages/forge.html" class="module-nav-link">04 FORGE</a>
+          <a href="/pages/meridian.html" class="module-nav-link">05 MERIDIAN</a>
+          <a href="/pages/sentinel.html" class="module-nav-link">06 SENTINEL</a>
+          <a href="/pages/sense.html" class="module-nav-link">07 SENSE</a>
+        </nav>
+      </div>
+
+      <div class="module-header-right">
+        <a href="/pages/workspace.html" class="btn-nav-primary">
+          <span>Launch Workspace →</span>
+        </a>
+        <a href="/pages/phantom.html#aegis" class="btn-nav-outline">
+          <span>← Architecture</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="module-main-wrap">
+    <!-- Hero Block -->
+    <section class="module-hero-block">
+      <div class="module-tagline-eyebrow">
+        <span class="dot"></span>
+        <span>SPECIALIZED CLINICAL SPATIAL INTELLIGENCE · MODULE 03</span>
+      </div>
+      <h1 class="module-headline">
+        Clarity in<br><em>critical spaces.</em>
+      </h1>
+      <p class="module-lead">
+        AEGIS applies PHANTOM's local-first spatial intelligence to surgical operating suites, sterile mayo stands, and secure hospital pharmacy vaults. It maintains an auditable spatial record of sterile instruments, cold-chain custody, and procedural staging without cloud video streaming.
+      </p>
+      <div class="module-cta-row">
+        <a href="#surgicalCountSection" class="btn-nav-primary">
+          <span>Inspect OR Tray Matrix ↓</span>
+        </a>
+        <a href="#coldChainSection" class="btn-nav-outline">
+          <span>DEA Cold-Chain Ledger</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Chapter 01: Surgical Tray Reconciliation -->
+    <section class="module-chapter" id="surgicalCountSection">
+      <div class="chapter-index">
+        <span class="num">01</span>
+        <span>SURGICAL OPERATING SUITE OR-3 · STERILE INSTRUMENT COUNT</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Pre & post-operative<br><em>tray reconciliation.</em></h2>
+        <p class="chapter-desc">
+          Mayo stands and sterile back tables are continuously indexed. Centroid tracking verifies instrument returns before wound closure, providing dual-nurse spatial confirmation without tagging surgical steel.
+        </p>
+      </div>
+
+      <div class="surgical-board-layout">
+        <div class="tray-matrix-card">
+          <div class="tray-matrix-header">
+            <span>STERILE FIELD TRAY · OR-3</span>
+            <span style="color: #4ade80;">100% RECONCILED</span>
+          </div>
+
+          <div class="instrument-grid">
+            <div class="instrument-slot verified">
+              <div class="instrument-name">Scalpel #10</div>
+              <div class="instrument-state">Tray Bay 01 · Present</div>
+            </div>
+            <div class="instrument-slot verified">
+              <div class="instrument-name">Scalpel #15</div>
+              <div class="instrument-state">Tray Bay 02 · Present</div>
+            </div>
+            <div class="instrument-slot verified">
+              <div class="instrument-name">Metzenbaum Scissors</div>
+              <div class="instrument-state">Center Stand · Present</div>
+            </div>
+            <div class="instrument-slot verified">
+              <div class="instrument-name">Halstead Mosquito (x4)</div>
+              <div class="instrument-state">Clamps · 4 of 4 In Tray</div>
+            </div>
+            <div class="instrument-slot verified">
+              <div class="instrument-name">Weitlaner Retractor</div>
+              <div class="instrument-state">Lower Rack · Present</div>
+            </div>
+            <div class="instrument-slot verified">
+              <div class="instrument-name">Laparotomy Sponges</div>
+              <div class="instrument-state">5 of 5 Accounted</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tray-attestation-panel">
+          <div class="attestation-status-box">
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--module-accent); margin-bottom: 8px;">
+              DUAL-NURSE SIGN-OFF LEDGER
+            </div>
+            <div class="signoff-row">
+              <span>Scrub Nurse Attestation</span>
+              <strong style="color: #15803d;">✓ Verified 14:22:08</strong>
+            </div>
+            <div class="signoff-row">
+              <span>Circulating Nurse Review</span>
+              <strong style="color: #15803d;">✓ Verified 14:22:15</strong>
+            </div>
+            <div class="signoff-row">
+              <span>Discrepancy Count</span>
+              <strong>0 Unaccounted Items</strong>
+            </div>
+          </div>
+
+          <div style="font-size: 13px; color: var(--slate-gray); line-height: 1.55;">
+            Observations are recorded directly from overhead surgical lighting cameras. Frames settle in local browser memory and are discarded once count parity is established.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 02: DEA Cold-Chain Vault Custody -->
+    <section class="module-chapter" id="coldChainSection">
+      <div class="chapter-index">
+        <span class="num">02</span>
+        <span>CENTRAL PHARMACY · DEA SCHEDULE II COLD-CHAIN CUSTODY</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Continuous physical custody<br><em>in refrigerated vaults.</em></h2>
+        <p class="chapter-desc">
+          Automates visual audit trails inside controlled substance vaults and vaccine refrigeration units. Monitors door transitions, shelf coordinates, and removal timestamps.
+        </p>
+      </div>
+
+      <table class="custody-ledger-table">
+        <thead>
+          <tr>
+            <th>Medication Specimen</th>
+            <th>Vault Location</th>
+            <th>Temperature</th>
+            <th>Last Verified State</th>
+            <th>Attestation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Fentanyl Citrate 50mcg/mL</strong><br><span style="font-size: 12px; color: var(--slate-gray);">NDC 0409-9093-22 · 10x 2mL Vials</span></td>
+            <td>Chamber Vault Bay 02-A</td>
+            <td><span style="font-family: var(--font-mono); color: #0284c7;">+4.1°C</span></td>
+            <td>Present & Sealed</td>
+            <td><span class="tamper-seal-badge">Dual Key Verified</span></td>
+          </tr>
+          <tr>
+            <td><strong>Morphine Sulfate 10mg/mL</strong><br><span style="font-size: 12px; color: var(--slate-gray);">NDC 0641-6071-25 · 25x Ampules</span></td>
+            <td>Chamber Vault Bay 02-B</td>
+            <td><span style="font-family: var(--font-mono); color: #0284c7;">+4.0°C</span></td>
+            <td>Present & Counted</td>
+            <td><span class="tamper-seal-badge">Dual Key Verified</span></td>
+          </tr>
+          <tr>
+            <td><strong>mRNA COVID-19 Vaccine (Bivalent)</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Cold-Chain Lot #849201 · 50 Doses</span></td>
+            <td>Ultracold Sub-Vault 01</td>
+            <td><span style="font-family: var(--font-mono); color: #0284c7;">-78.4°C</span></td>
+            <td>Unbroken Cold-Chain</td>
+            <td><span class="tamper-seal-badge">Pharmacist Sealed</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Chapter 03: Human Supervised Boundary -->
+    <section class="module-chapter">
+      <div class="chapter-index">
+        <span class="num">03</span>
+        <span>CLINICAL ETHICS & SUPERVISION PRINCIPLE</span>
+      </div>
+      <div style="background: var(--lifted-cream); border: 1px solid var(--line-border); border-radius: var(--radius-lg); padding: 32px; max-width: 820px;">
+        <h3 style="font-family: var(--font-display); font-size: 26px; margin: 0 0 12px; color: var(--ink-black);">
+          Human clinical attestation is mandatory.
+        </h3>
+        <p style="font-size: 14.5px; line-height: 1.6; color: var(--charcoal); margin: 0 0 16px;">
+          AEGIS is designed strictly as a spatial verification assistant for licensed medical personnel. It never issues diagnostic conclusions, never authorizes clinical discharge autonomously, and never replaces surgical count protocols.
+        </p>
+        <div style="font-family: var(--font-mono); font-size: 11.5px; color: var(--slate-gray);">
+          FDA 21 CFR PART 11 AUDIT TRAIL READY · ZERO EXTERNAL TELEMETRY
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/src/api/inspector.js"></script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F3F0EE">
+  <meta name="description" content="MERIDIAN — Retail & Commercial Spatial Intelligence powered by PHANTOM.">
+  <title>MERIDIAN — Retail Planogram & Archival Spatial Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/module-shared.css?v=2.0.0">
+  <style>
+    :root {
+      --module-accent: #D97706;
+      --module-accent-light: #FBBF24;
+      --module-accent-rgb: 217, 119, 6;
+    }
+  </style>
+</head>
+<body data-module="meridian">
+  <!-- Top Floating Pill Header (SMRITI Benchmark) -->
+  <header class="module-site-header">
+    <div class="module-header-inner">
+      <div class="module-header-left">
+        <a href="/pages/phantom.html" class="module-brand">
+          <span>PHANTOM</span>
+          <span class="module-brand-sep">/</span>
+          <span class="module-brand-name">MERIDIAN</span>
+        </a>
+        <span class="module-domain-badge">05 · COMMERCIAL</span>
+      </div>
+
+      <div class="module-header-center">
+        <nav class="module-nav-pills" aria-label="Ecosystem Switcher">
+          <a href="/pages/smriti.html" class="module-nav-link">01 SMRITI</a>
+          <a href="/pages/lumen.html" class="module-nav-link">02 LUMEN</a>
+          <a href="/pages/aegis.html" class="module-nav-link">03 AEGIS</a>
+          <a href="/pages/forge.html" class="module-nav-link">04 FORGE</a>
+          <a href="/pages/meridian.html" class="module-nav-link is-active">05 MERIDIAN</a>
+          <a href="/pages/sentinel.html" class="module-nav-link">06 SENTINEL</a>
+          <a href="/pages/sense.html" class="module-nav-link">07 SENSE</a>
+        </nav>
+      </div>
+
+      <div class="module-header-right">
+        <a href="/pages/workspace.html" class="btn-nav-primary">
+          <span>Launch Workspace →</span>
+        </a>
+        <a href="/pages/phantom.html#meridian" class="btn-nav-outline">
+          <span>← Architecture</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="module-main-wrap">
+    <!-- Hero Block -->
+    <section class="module-hero-block">
+      <div class="module-tagline-eyebrow">
+        <span class="dot"></span>
+        <span>RETAIL & ARCHIVAL SPATIAL INTELLIGENCE · MODULE 05</span>
+      </div>
+      <h1 class="module-headline">
+        Compliance on the shelf,<br><em>custody in the archive.</em>
+      </h1>
+      <p class="module-lead">
+        MERIDIAN bridges high-velocity retail shelf compliance and rare archival collection preservation. It audits planogram facings, flags misplaced SKUs, and monitors museum display vitrines without physical tags or RFID stickers.
+      </p>
+      <div class="module-cta-row">
+        <a href="#planogramSection" class="btn-nav-primary">
+          <span>Inspect Planogram Facing ↓</span>
+        </a>
+        <a href="#archiveSection" class="btn-nav-outline">
+          <span>Rare Archival Ledger</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Chapter 01: Retail Planogram Compliance -->
+    <section class="module-chapter" id="planogramSection">
+      <div class="chapter-index">
+        <span class="num">01</span>
+        <span>RETAIL AISLE 04 · PLANOGRAM FACING COMPLIANCE & VOID DETECTION</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Continuous shelf facing<br><em>& out-of-stock detection.</em></h2>
+        <p class="chapter-desc">
+          Shelf cameras verify product facings against digital planograms. Flags stockouts, detects misplaced items returned to incorrect rows, and calculates shelf compliance scores in real time.
+        </p>
+      </div>
+
+      <div class="planogram-shelf-stage">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);">SHELF MODULE: AISLE 04 · EYE-LEVEL TIER 2</span>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: #b45309; font-weight: 600;">1 STOCKOUT VOID DETECTED</span>
+        </div>
+
+        <div class="shelf-wireframe">
+          <div class="facing-unit">
+            <div>
+              <div style="font-weight: 600;">Artisan Roast 340g</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--slate-gray);">SKU #4881</div>
+            </div>
+            <div style="font-family: var(--font-mono); color: #15803d; font-weight: 600;">4 Facings (100%)</div>
+          </div>
+
+          <div class="facing-unit">
+            <div>
+              <div style="font-weight: 600;">Espresso Blend 340g</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--slate-gray);">SKU #4882</div>
+            </div>
+            <div style="font-family: var(--font-mono); color: #15803d; font-weight: 600;">3 Facings (100%)</div>
+          </div>
+
+          <div class="facing-unit void">
+            <div>
+              <div style="font-weight: 600; color: #b45309;">Dark Roast Reserve</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: #b45309;">SKU #4883</div>
+            </div>
+            <div style="font-family: var(--font-mono); color: #b91c1c; font-weight: 600;">0 Facings (VOID)</div>
+          </div>
+
+          <div class="facing-unit">
+            <div>
+              <div style="font-weight: 600;">Single Origin Decaf</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--slate-gray);">SKU #4884</div>
+            </div>
+            <div style="font-family: var(--font-mono); color: #15803d; font-weight: 600;">2 Facings (100%)</div>
+          </div>
+        </div>
+
+        <div style="font-size: 13px; color: var(--charcoal);">
+          Restock Alert: Dark Roast Reserve restock ticket auto-dispatched to stockroom terminal.
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 02: Rare Archival Conservation -->
+    <section class="module-chapter" id="archiveSection">
+      <div class="chapter-index">
+        <span class="num">02</span>
+        <span>SPECIAL COLLECTIONS VAULT · RARE MANUSCRIPT DISPLAY CASE</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Environmental custody &<br><em>non-invasive vitrine monitoring.</em></h2>
+        <p class="chapter-desc">
+          Monitors historical manuscripts and high-value artifacts inside sealed exhibition cases. Records cumulative light exposure (Lux-hours) and micro-displacements.
+        </p>
+      </div>
+
+      <table class="custody-ledger-table">
+        <thead>
+          <tr>
+            <th>Historical Collection Item</th>
+            <th>Vitrine Enclosure</th>
+            <th>Lux-Hours Exposure</th>
+            <th>Relative Humidity</th>
+            <th>Spatial Integrity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Codex Illuminated Manuscript (c. 1480)</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Vellum Binding · Folio 14</span></td>
+            <td>Vitrine Case 01-A (Main Gallery)</td>
+            <td><span style="font-family: var(--font-mono); color: #d97706;">142 Lux (Safe &lt;200)</span></td>
+            <td>48.2% RH (Regulated)</td>
+            <td><span class="tamper-seal-badge">Centroid Stationary</span></td>
+          </tr>
+          <tr>
+            <td><strong>Gold Seal of King Edward IV</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Wax & Bronze Matrix</span></td>
+            <td>Secure Vault Case 03</td>
+            <td><span style="font-family: var(--font-mono); color: #d97706;">0 Lux (Dark Storage)</span></td>
+            <td>45.0% RH (Regulated)</td>
+            <td><span class="tamper-seal-badge">Centroid Stationary</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <script type="module" src="/src/api/inspector.js"></script>
+</body>
+</html>

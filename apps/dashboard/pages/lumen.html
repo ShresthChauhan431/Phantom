@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F3F0EE">
+  <meta name="description" content="LUMEN — Laboratory Intelligence & Specimen Proximity Monitoring powered by PHANTOM.">
+  <title>LUMEN — Laboratory Intelligence & Spatial Sample Tracking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/module-shared.css?v=2.0.0">
+  <style>
+    :root {
+      --module-accent: #7C3AED;
+      --module-accent-light: #A78BFA;
+      --module-accent-rgb: 124, 58, 237;
+    }
+  </style>
+</head>
+<body data-module="lumen">
+  <!-- Top Floating Pill Header (SMRITI Benchmark) -->
+  <header class="module-site-header">
+    <div class="module-header-inner">
+      <div class="module-header-left">
+        <a href="/pages/phantom.html" class="module-brand">
+          <span>PHANTOM</span>
+          <span class="module-brand-sep">/</span>
+          <span class="module-brand-name">LUMEN</span>
+        </a>
+        <span class="module-domain-badge">02 · LABORATORY</span>
+      </div>
+
+      <div class="module-header-center">
+        <nav class="module-nav-pills" aria-label="Ecosystem Switcher">
+          <a href="/pages/smriti.html" class="module-nav-link">01 SMRITI</a>
+          <a href="/pages/lumen.html" class="module-nav-link is-active">02 LUMEN</a>
+          <a href="/pages/aegis.html" class="module-nav-link">03 AEGIS</a>
+          <a href="/pages/forge.html" class="module-nav-link">04 FORGE</a>
+          <a href="/pages/meridian.html" class="module-nav-link">05 MERIDIAN</a>
+          <a href="/pages/sentinel.html" class="module-nav-link">06 SENTINEL</a>
+          <a href="/pages/sense.html" class="module-nav-link">07 SENSE</a>
+        </nav>
+      </div>
+
+      <div class="module-header-right">
+        <a href="/pages/workspace.html" class="btn-nav-primary">
+          <span>Launch Workspace →</span>
+        </a>
+        <a href="/pages/phantom.html#lumen" class="btn-nav-outline">
+          <span>← Architecture</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="module-main-wrap">
+    <!-- Hero Block -->
+    <section class="module-hero-block">
+      <div class="module-tagline-eyebrow">
+        <span class="dot"></span>
+        <span>LABORATORY SPATIAL INTELLIGENCE · MODULE 02</span>
+      </div>
+      <h1 class="module-headline">
+        Traceability in<br><em>the analytical bay.</em>
+      </h1>
+      <p class="module-lead">
+        LUMEN coordinates high-throughput molecular laboratories, cleanroom benches, and biobank cryo-storage. It indexes specimen tube racks, verifies pipette calibration positions, and prevents hazardous reagent co-location through continuous spatial reasoning.
+      </p>
+      <div class="module-cta-row">
+        <a href="#plateMatrixSection" class="btn-nav-primary">
+          <span>Inspect 96-Well Matrix ↓</span>
+        </a>
+        <a href="#proximitySection" class="btn-nav-outline">
+          <span>Chemical Proximity Rules</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Chapter 01: PCR 96-Well Plate Matrix -->
+    <section class="module-chapter" id="plateMatrixSection">
+      <div class="chapter-index">
+        <span class="num">01</span>
+        <span>BENCH 04 · 96-WELL PCR ASSAY PLATE MATRIX</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Micro-well accession<br><em>& coordinate indexing.</em></h2>
+        <p class="chapter-desc">
+          High-resolution benchtop cameras track well-level pipette transfers without barcode scanning each vial. Centroid positioning maps pipette tips directly to microplate wells (Rows A–H, Columns 1–12).
+        </p>
+      </div>
+
+      <div class="plate-matrix-wrap">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--slate-gray);">PLATE ID: PCR-EXP-2026-0881 · BENCH ALPHA</span>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--module-accent);">96 OF 96 WELLS POPULATED</span>
+        </div>
+
+        <div class="plate-matrix-grid">
+          <!-- 12 Columns x 8 Rows simulated grid -->
+          <div class="plate-well-cell active" title="Well A01: DNA Extract Lot #81">A1</div>
+          <div class="plate-well-cell active" title="Well A02: DNA Extract Lot #82">A2</div>
+          <div class="plate-well-cell active" title="Well A03: DNA Extract Lot #83">A3</div>
+          <div class="plate-well-cell active" title="Well A04">A4</div>
+          <div class="plate-well-cell" title="Well A05">A5</div>
+          <div class="plate-well-cell" title="Well A06">A6</div>
+          <div class="plate-well-cell" title="Well A07">A7</div>
+          <div class="plate-well-cell" title="Well A08">A8</div>
+          <div class="plate-well-cell" title="Well A09">A9</div>
+          <div class="plate-well-cell" title="Well A10">A10</div>
+          <div class="plate-well-cell" title="Well A11">A11</div>
+          <div class="plate-well-cell" title="Well A12">A12</div>
+
+          <div class="plate-well-cell" title="Well B01">B1</div>
+          <div class="plate-well-cell" title="Well B02">B2</div>
+          <div class="plate-well-cell" title="Well B03">B3</div>
+          <div class="plate-well-cell" title="Well B04">B4</div>
+          <div class="plate-well-cell" title="Well B05">B5</div>
+          <div class="plate-well-cell" title="Well B06">B6</div>
+          <div class="plate-well-cell" title="Well B07">B7</div>
+          <div class="plate-well-cell" title="Well B08">B8</div>
+          <div class="plate-well-cell" title="Well B09">B9</div>
+          <div class="plate-well-cell" title="Well B10">B10</div>
+          <div class="plate-well-cell" title="Well B11">B11</div>
+          <div class="plate-well-cell" title="Well B12">B12</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--slate-gray);">
+          <span>Pipettor position: Aligned to Well A04 (Center Euclidean Drift: 0.012)</span>
+          <span>Buffer: Taq Polymerase Ready</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 02: Hazardous Chemical Proximity -->
+    <section class="module-chapter" id="proximitySection">
+      <div class="chapter-index">
+        <span class="num">02</span>
+        <span>FUME HOOD 02 · REAGENT PROXIMITY SAFETY RULES</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Incompatible chemical<br><em>co-location prevention.</em></h2>
+        <p class="chapter-desc">
+          Spatial relationship evaluation enforces physical segregation rules between oxidizers, flammables, and strong acids. If incompatible containers are staged within 1.0 meter, an audible bench alert is triggered.
+        </p>
+      </div>
+
+      <div class="proximity-rule-box">
+        <span style="font-size: 22px;">⚠️</span>
+        <div>
+          <strong>Active Segregation Envelope: Confirmed Compliant</strong>
+          <div style="font-size: 12.5px; opacity: 0.9; margin-top: 2px;">
+            Glacial Acetic Acid (Cabinet 03) is 2.4 meters from Nitric Acid (Acid Locker A). Minimum separation threshold (1.0m) maintained.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 03: Biobank Custody Ledger -->
+    <section class="module-chapter">
+      <div class="chapter-index">
+        <span class="num">03</span>
+        <span>CRYO-BIOBANK · ULTRACOLD SPECIMEN CUSTODY</span>
+      </div>
+
+      <table class="custody-ledger-table">
+        <thead>
+          <tr>
+            <th>Specimen Identification</th>
+            <th>Storage Zone</th>
+            <th>Temperature</th>
+            <th>Chain of Custody</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>PBMC Cell Line #4902-A</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Cryovial 1.8mL · Nitrogen Vapor</span></td>
+            <td>Cryo-Tank 01 · Rack 03 · Box B</td>
+            <td><span style="font-family: var(--font-mono); color: #7c3aed;">-196.0°C</span></td>
+            <td>Dr. E. Vance → Bench Transfer</td>
+            <td><span class="tamper-seal-badge">Verified In Tank</span></td>
+          </tr>
+          <tr>
+            <td><strong>Genomic RNA Extract #1108</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Plate Lot #04 · 50uL Aliquot</span></td>
+            <td>Deep Freezer 02 · Shelf 01</td>
+            <td><span style="font-family: var(--font-mono); color: #7c3aed;">-80.2°C</span></td>
+            <td>Automated Staging Verified</td>
+            <td><span class="tamper-seal-badge">Temperature Intact</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <script type="module" src="/src/api/inspector.js"></script>
+</body>
+</html>

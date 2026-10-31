@@ -22,9 +22,14 @@ EXACTLY ONE JSON object, no prose, no markdown fences, matching this schema:
 Rules:
 - Do NOT include any timestamp or date. You cannot know the current time; the
   system records when the frame was captured.
+- Ignore people, hands and body parts. They are not objects; report what they
+  left behind or moved, never the person.
 - "object" MUST be lowercase snake_case (e.g. "blue_water_bottle", "car_keys").
 - "appeared": object is newly present -> "from" is null.
 - "moved": object was known and is now elsewhere -> both "from" and "to" set.
+  Only use "moved" if the object is visibly in a different place on the surface.
+  Describing the same position in different words is NOT a move — that is
+  "unchanged".
 - "removed": object was known and is now gone -> "to" is null.
 - "unchanged": nothing meaningful changed -> use the object's current location.
 - "ambiguous": you cannot tell what changed or which object it is. Use this

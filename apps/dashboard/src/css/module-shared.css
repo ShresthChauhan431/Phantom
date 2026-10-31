@@ -1,0 +1,788 @@
+/* ==============================================================================
+   PHANTOM SPECIALIZED INTELLIGENCE MODULES — SHARED DESIGN SYSTEM
+   Visual Benchmark: SMRITI Editorial Craftsmanship & Apple-Level Restraint
+   Canvas: Warm Putty Cream (#F3F0EE) · Ink Black (#141413) · Tailored Accents
+   ============================================================================== */
+
+:root {
+  /* SMRITI Palette Tokens */
+  --canvas-cream: #F3F0EE;
+  --lifted-cream: #FCFBFA;
+  --pure-white: #FFFFFF;
+  --soft-bone: #EBE7E3;
+  --ink-black: #141413;
+  --charcoal: #262627;
+  --slate-gray: #696969;
+  --granite: #555555;
+  --dust-taupe: #D1CDC7;
+  --line-border: rgba(20, 20, 19, 0.08);
+  --line-border-strong: rgba(20, 20, 19, 0.16);
+  --line-border-subtle: rgba(20, 20, 19, 0.04);
+
+  /* Module-Specific Accent (Default SMRITI Orange, overridden per module) */
+  --module-accent: #CF4500;
+  --module-accent-light: #F37338;
+  --module-accent-rgb: 207, 69, 0;
+
+  /* Typography */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Layout Scale */
+  --content-max-width: 1240px;
+  --page-gutter: clamp(20px, 4vw, 44px);
+  --section-pad-y: clamp(64px, 7vw, 108px);
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-subtle: 0 4px 20px rgba(20, 20, 19, 0.04);
+  --shadow-floating: 0 8px 32px rgba(20, 20, 19, 0.07);
+  --shadow-card: 0 16px 40px rgba(20, 20, 19, 0.06);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+  background-color: var(--canvas-cream);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--canvas-cream);
+  color: var(--ink-black);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ==============================================================================
+   FLOATING PILL NAVIGATION (SMRITI BENCHMARK)
+   ============================================================================== */
+.module-site-header {
+  position: fixed;
+  top: clamp(14px, 2vw, 22px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.module-header-inner {
+  pointer-events: auto;
+  width: min(calc(100% - 2 * var(--page-gutter)), var(--content-max-width));
+  height: 58px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-subtle);
+  padding: 0 12px 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.module-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.module-brand {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15.5px;
+  letter-spacing: -0.02em;
+  color: var(--ink-black);
+}
+
+.module-brand-sep {
+  color: var(--slate-gray);
+  font-weight: 400;
+  opacity: 0.5;
+  margin: 0 2px;
+}
+
+.module-brand-name {
+  font-weight: 600;
+  color: var(--module-accent);
+}
+
+.module-domain-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--canvas-cream);
+  color: var(--slate-gray);
+  border: 1px solid var(--line-border);
+}
+
+/* Ecosystem Switcher Nav */
+.module-header-center {
+  display: flex;
+  align-items: center;
+}
+
+.module-nav-pills {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--lifted-cream);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  overflow-x: auto;
+}
+
+.module-nav-link {
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--slate-gray);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.module-nav-link:hover {
+  color: var(--ink-black);
+}
+
+.module-nav-link.is-active {
+  background: var(--pure-white);
+  color: var(--ink-black);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.module-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-nav-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ink-black);
+  color: var(--pure-white);
+  border: 1.5px solid var(--ink-black);
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-nav-primary:hover {
+  background: #2a2a29;
+  border-color: #2a2a29;
+  transform: translateY(-1px);
+}
+
+.btn-nav-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--slate-gray);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-nav-outline:hover {
+  color: var(--ink-black);
+  background: rgba(20, 20, 19, 0.04);
+}
+
+/* ==============================================================================
+   MAIN CONTAINER & HERO
+   ============================================================================== */
+.module-main-wrap {
+  width: min(calc(100% - 2 * var(--page-gutter)), var(--content-max-width));
+  margin: 0 auto;
+  padding-top: clamp(100px, 12vw, 136px);
+  padding-bottom: 120px;
+}
+
+.module-hero-block {
+  margin-bottom: clamp(48px, 6vw, 80px);
+}
+
+.module-tagline-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--slate-gray);
+  margin-bottom: 16px;
+}
+
+.module-tagline-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--module-accent);
+}
+
+.module-headline {
+  font-family: var(--font-display);
+  font-size: clamp(38px, 5.2vw, 68px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink-black);
+  margin: 0 0 20px;
+  max-width: 20ch;
+}
+
+.module-headline em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.module-lead {
+  font-family: var(--font-body);
+  font-size: clamp(16px, 1.35vw, 18px);
+  line-height: 1.6;
+  color: var(--charcoal);
+  max-width: 58ch;
+  margin: 0 0 28px;
+}
+
+.module-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ==============================================================================
+   EDITORIAL CHAPTER HEADINGS (SMRITI BENCHMARK)
+   ============================================================================== */
+.module-chapter {
+  margin-bottom: clamp(64px, 8vw, 100px);
+  padding-top: clamp(32px, 4vw, 48px);
+  border-top: 1px solid var(--line-border);
+}
+
+.chapter-index {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--slate-gray);
+  margin-bottom: 24px;
+}
+
+.chapter-index .num {
+  color: var(--module-accent);
+  font-weight: 600;
+}
+
+.chapter-headline-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  margin-bottom: 36px;
+}
+
+@media (max-width: 768px) {
+  .chapter-headline-split {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.chapter-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.2vw, 42px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--ink-black);
+  margin: 0;
+}
+
+.chapter-title em {
+  font-style: italic;
+}
+
+.chapter-desc {
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--charcoal);
+  margin: 0;
+}
+
+/* ==============================================================================
+   DOMAIN COMPONENT: AEGIS SURGICAL TRAY BOARD
+   ============================================================================== */
+.surgical-board-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 32px;
+  background: var(--lifted-cream);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+}
+
+@media (max-width: 960px) {
+  .surgical-board-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tray-matrix-card {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: var(--radius-md);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tray-matrix-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.instrument-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.instrument-slot {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 12px;
+}
+
+.instrument-slot.verified {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.instrument-name {
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.instrument-state {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #38bdf8;
+}
+
+.tray-attestation-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.attestation-status-box {
+  background: var(--pure-white);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.signoff-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-border);
+  font-size: 13px;
+}
+
+.signoff-row:last-child {
+  border-bottom: none;
+}
+
+/* ==============================================================================
+   DOMAIN COMPONENT: LUMEN 96-WELL PLATE MATRIX
+   ============================================================================== */
+.plate-matrix-wrap {
+  background: var(--lifted-cream);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+}
+
+.plate-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 6px;
+  padding: 24px;
+  background: #1e1b4b;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+}
+
+.plate-well-cell {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #c7d2fe;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.plate-well-cell:hover, .plate-well-cell.active {
+  background: #7c3aed;
+  border-color: #a78bfa;
+  transform: scale(1.15);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.6);
+}
+
+.proximity-rule-box {
+  background: #fdf4ff;
+  border: 1px solid #f0abfc;
+  border-radius: var(--radius-md);
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13.5px;
+  color: #701a75;
+}
+
+/* ==============================================================================
+   DOMAIN COMPONENT: FORGE TOOL CRIB SHADOW BOARD
+   ============================================================================== */
+.tool-crib-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.shadow-tool-slot {
+  background: var(--lifted-cream);
+  border: 1.5px dashed var(--line-border-strong);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.shadow-tool-slot.present {
+  background: var(--pure-white);
+  border-style: solid;
+  border-color: var(--line-border);
+}
+
+.shadow-tool-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.shadow-tool-name {
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink-black);
+}
+
+.shadow-tool-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.shadow-tool-status.in-crib {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.shadow-tool-status.checked-out {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* ==============================================================================
+   DOMAIN COMPONENT: MERIDIAN PLANOGRAM VISUALIZER
+   ============================================================================== */
+.planogram-shelf-stage {
+  background: var(--lifted-cream);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.shelf-wireframe {
+  background: #fffbeb;
+  border: 2px solid #fde68a;
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.facing-unit {
+  flex: 1;
+  min-width: 110px;
+  height: 140px;
+  border-radius: var(--radius-sm);
+  background: var(--pure-white);
+  border: 1px solid #fcd34d;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px;
+  font-size: 12px;
+}
+
+.facing-unit.void {
+  background: repeating-linear-gradient(45deg, #fef3c7, #fef3c7 8px, #fffbeb 8px, #fffbeb 16px);
+  border-color: #f59e0b;
+}
+
+/* ==============================================================================
+   DOMAIN COMPONENT: SENTINEL EVIDENCE CHAIN OF CUSTODY
+   ============================================================================== */
+.custody-ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--pure-white);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.custody-ledger-table th {
+  padding: 14px 20px;
+  background: rgba(20, 20, 19, 0.02);
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--slate-gray);
+  border-bottom: 1px solid var(--line-border);
+}
+
+.custody-ledger-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line-border);
+  font-size: 13.5px;
+}
+
+.custody-ledger-table tr:last-child td {
+  border-bottom: none;
+}
+
+.tamper-seal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* ==============================================================================
+   DOMAIN COMPONENT: SENSE DEPARTURE LAUNCHPAD
+   ============================================================================== */
+.launchpad-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.launchpad-tile {
+  background: var(--pure-white);
+  border: 2px solid var(--line-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+
+.launchpad-tile.ready {
+  border-color: #059669;
+  background: #f0fdf4;
+}
+
+.launchpad-tile-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink-black);
+  margin-bottom: 8px;
+}
+
+.launchpad-tile-status {
+  font-size: 13px;
+  color: #065f46;
+  font-weight: 500;
+}
+
+/* ==============================================================================
+   DOMAIN COMPONENT: SMRITI RESIDENTIAL FLOORPLAN
+   ============================================================================== */
+.floorplan-zones-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 900px) {
+  .floorplan-zones-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.zone-memory-card {
+  background: var(--lifted-cream);
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.zone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-border);
+}
+
+.zone-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  margin: 0;
+  color: var(--ink-black);
+}
+
+.zone-items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.zone-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+/* ==============================================================================
+   RESPONSIVE OVERRIDES
+   ============================================================================== */
+@media (max-width: 768px) {
+  .module-header-inner {
+    padding: 0 12px 0 16px;
+    height: 50px;
+    gap: 8px;
+  }
+  .module-header-center {
+    display: none;
+  }
+  .btn-nav-primary {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+  .btn-nav-outline {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  .module-main-wrap {
+    padding-top: 80px;
+  }
+  .module-headline {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-nav-outline span {
+    display: none;
+  }
+  .btn-nav-outline::after {
+    content: '←';
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .btn-nav-primary span {
+    font-size: 11.5px;
+  }
+}

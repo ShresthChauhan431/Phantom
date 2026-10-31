@@ -31,15 +31,22 @@ class MotionResult:
 class MotionGate:
     """Frame-differencing motion detector.
 
-    Measured against live camera frames and controlled noise tests: the Gaussian
-    blur below already suppresses Gaussian sensor noise completely (a static scene
-    with noise up to sigma=20 scores 0.00000), while a real object move still scores
-    ~0.05. So no extra denoising is needed for ordinary sensor noise, and the default
-    threshold is set for a genuinely static scene.
+    Measured against live camera frames and controlled noise tests. Two different
+    kinds of noise matter:
 
-    ``open_ksize`` (morphological opening) is available but **off by default**: it
-    only earns its cost against blocky/impulse artifacts, e.g. a lossy MJPEG phone
-    stream. Enable it if a compressed source produces speckle the blur can't absorb.
+    * Gaussian sensor noise — absorbed completely by the blur below (a static
+      scene with noise up to sigma=20 scores 0.00000).
+    * Edge shimmer — on the real iPhone stream (JPEG-compressed, with focus and
+      exposure micro-adjusting) object *outlines* flicker by 25-90 grey levels while
+      nothing moves. Measured on a still desk: up to 4.9% of pixels "changed" versus
+      the reference frame, all of it on edges, enough to fire the gate and send a
+      reworded description of an unmoved object to the VLM as a fake "move".
+
+    ``open_ksize`` (morphological opening) removes the shimmer: the changed regions
+    are 1-3px-wide outlines, which a 9px opening erases, while a moved object
+    leaves a solid blob that survives. Measured on the same still desk, 9px cut
+    drift from 0.049 to 0.002 and kept 82% of a real move's signal. It defaults to
+    off for synthetic/test sources; the live launcher enables it.
 
     Args:
         motion_threshold: fraction of changed pixels above which the scene counts
@@ -48,6 +55,7 @@ class MotionGate:
         pixel_delta: per-pixel intensity delta (0-255) that counts as "changed".
         blur_ksize: Gaussian blur kernel size to damp sensor noise (odd int).
         open_ksize: morphological opening kernel in pixels; 0 disables (default).
+            ``PHANTOM_GATE_OPEN_KSIZE``.
     """
 
     def __init__(
@@ -61,14 +69,20 @@ class MotionGate:
         self.pixel_delta = pixel_delta
         self.blur_ksize = blur_ksize
         self.open_ksize = open_ksize
+        self.last_score = 0.0
 
     def _prep(self, image: np.ndarray) -> np.ndarray:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         k = self.blur_ksize
         return cv2.GaussianBlur(gray, (k, k), 0)
 
-    def score(self, prev: Frame, curr: Frame) -> float:
-        """Fraction of pixels that changed between ``prev`` and ``curr``."""
+    def change_mask(self, prev: Frame, curr: Frame) -> np.ndarray:
+        """Binary mask (uint8, 0/255) of pixels that changed between the frames.
+
+        This is the gate's evidence of *where* the scene changed. It is used both
+        for the score and for checking that a change the VLM reports actually
+        happened at the place it names.
+        """
         a = self._prep(prev.image)
         b = self._prep(curr.image)
         if a.shape != b.shape:
@@ -76,13 +90,23 @@ class MotionGate:
         diff = cv2.absdiff(a, b)
         _, mask = cv2.threshold(diff, self.pixel_delta, 255, cv2.THRESH_BINARY)
         if self.open_ksize:
-            # Erase scattered single-pixel sensor noise; keep contiguous real change.
+            # Erase thin edge shimmer and speckle; keep the solid blobs a real
+            # object leaves behind or arrives as.
             kernel = cv2.getStructuringElement(
                 cv2.MORPH_ELLIPSE, (self.open_ksize, self.open_ksize)
             )
             mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        return mask
+
+    def score(self, prev: Frame, curr: Frame) -> float:
+        """Fraction of pixels that changed between ``prev`` and ``curr``."""
+        mask = self.change_mask(prev, curr)
         changed = int(np.count_nonzero(mask))
-        return changed / mask.size
+        result = changed / mask.size
+        # Kept for telemetry: the score the gate actually decided on, so the UI can
+        # show the engine's real motion reading rather than recomputing its own.
+        self.last_score = result
+        return result
 
     def compare(self, prev: Frame, curr: Frame) -> MotionResult:
         s = self.score(prev, curr)

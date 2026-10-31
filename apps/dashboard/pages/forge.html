@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F3F0EE">
+  <meta name="description" content="FORGE — Industrial & Logistics Spatial Intelligence powered by PHANTOM.">
+  <title>FORGE — Industrial Intelligence & Tool Crib Verification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/module-shared.css?v=2.0.0">
+  <style>
+    :root {
+      --module-accent: #0D9488;
+      --module-accent-light: #2DD4BF;
+      --module-accent-rgb: 13, 148, 136;
+    }
+  </style>
+</head>
+<body data-module="forge">
+  <!-- Top Floating Pill Header (SMRITI Benchmark) -->
+  <header class="module-site-header">
+    <div class="module-header-inner">
+      <div class="module-header-left">
+        <a href="/pages/phantom.html" class="module-brand">
+          <span>PHANTOM</span>
+          <span class="module-brand-sep">/</span>
+          <span class="module-brand-name">FORGE</span>
+        </a>
+        <span class="module-domain-badge">04 · INDUSTRIAL</span>
+      </div>
+
+      <div class="module-header-center">
+        <nav class="module-nav-pills" aria-label="Ecosystem Switcher">
+          <a href="/pages/smriti.html" class="module-nav-link">01 SMRITI</a>
+          <a href="/pages/lumen.html" class="module-nav-link">02 LUMEN</a>
+          <a href="/pages/aegis.html" class="module-nav-link">03 AEGIS</a>
+          <a href="/pages/forge.html" class="module-nav-link is-active">04 FORGE</a>
+          <a href="/pages/meridian.html" class="module-nav-link">05 MERIDIAN</a>
+          <a href="/pages/sentinel.html" class="module-nav-link">06 SENTINEL</a>
+          <a href="/pages/sense.html" class="module-nav-link">07 SENSE</a>
+        </nav>
+      </div>
+
+      <div class="module-header-right">
+        <a href="/pages/workspace.html" class="btn-nav-primary">
+          <span>Launch Workspace →</span>
+        </a>
+        <a href="/pages/phantom.html#forge" class="btn-nav-outline">
+          <span>← Architecture</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="module-main-wrap">
+    <!-- Hero Block -->
+    <section class="module-hero-block">
+      <div class="module-tagline-eyebrow">
+        <span class="dot"></span>
+        <span>INDUSTRIAL & LOGISTICS SPATIAL INTELLIGENCE · MODULE 04</span>
+      </div>
+      <h1 class="module-headline">
+        Order across<br><em>the production floor.</em>
+      </h1>
+      <p class="module-lead">
+        FORGE monitors manufacturing facilities, high-bay warehouses, and precision tool cribs. It detects missing heavy tooling from shadow-boards, tracks volumetric pallet storage density, and enforces forklift safety clearance corridors.
+      </p>
+      <div class="module-cta-row">
+        <a href="#toolCribSection" class="btn-nav-primary">
+          <span>Inspect Tool Crib Matrix ↓</span>
+        </a>
+        <a href="#stagingBaySection" class="btn-nav-outline">
+          <span>Pallet Staging Bays</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Chapter 01: Tool Crib Shadow Board -->
+    <section class="module-chapter" id="toolCribSection">
+      <div class="chapter-index">
+        <span class="num">01</span>
+        <span>TOOL CRIB ALPHA · SHADOW-BOARD RETURN VERIFICATION</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Shadow-board status<br><em>& calibration custody.</em></h2>
+        <p class="chapter-desc">
+          Overhead ceiling cameras monitor tool silhouette boards in real-time. Tools are recognized by outline and spatial coordinate, flagging unreturned assets before shifts conclude.
+        </p>
+      </div>
+
+      <div class="tool-crib-board">
+        <div class="shadow-tool-slot present">
+          <div class="shadow-tool-header">
+            <span class="shadow-tool-name">Digital Micrometer 0-25mm</span>
+            <span class="shadow-tool-status in-crib">IN CRIB</span>
+          </div>
+          <div style="font-size: 13px; color: var(--slate-gray);">Bay 02 · Serial #MC-4881</div>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: #0d9488; margin-top: 6px;">Calibration Valid: 2026-12</div>
+        </div>
+
+        <div class="shadow-tool-slot">
+          <div class="shadow-tool-header">
+            <span class="shadow-tool-name">Pneumatic Impact 1/2"</span>
+            <span class="shadow-tool-status checked-out">CHECKED OUT</span>
+          </div>
+          <div style="font-size: 13px; color: var(--slate-gray);">Tech: J. Miller · Shift 2</div>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: #b91c1c; margin-top: 6px;">Removed: 13:40 (Station 4)</div>
+        </div>
+
+        <div class="shadow-tool-slot present">
+          <div class="shadow-tool-header">
+            <span class="shadow-tool-name">Torque Wrench 40-200Nm</span>
+            <span class="shadow-tool-status in-crib">IN CRIB</span>
+          </div>
+          <div style="font-size: 13px; color: var(--slate-gray);">Bay 05 · Serial #TW-9102</div>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: #0d9488; margin-top: 6px;">Verified in Silhouette</div>
+        </div>
+
+        <div class="shadow-tool-slot present">
+          <div class="shadow-tool-header">
+            <span class="shadow-tool-name">Optical Tachometer</span>
+            <span class="shadow-tool-status in-crib">IN CRIB</span>
+          </div>
+          <div style="font-size: 13px; color: var(--slate-gray);">Bay 08 · Serial #OT-3301</div>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: #0d9488; margin-top: 6px;">Verified in Silhouette</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 02: Volumetric Staging & Clearance -->
+    <section class="module-chapter" id="stagingBaySection">
+      <div class="chapter-index">
+        <span class="num">02</span>
+        <span>HIGH-BAY STAGING · VOLUMETRIC FILL & CLEAR-ZONE ENVELOPE</span>
+      </div>
+      <div class="chapter-headline-split">
+        <h2 class="chapter-title">Pallet density &<br><em>forklift aisle safety.</em></h2>
+        <p class="chapter-desc">
+          Calculates cubic occupancy in pallet storage bays while continuously verifying that pedestrian walkways and yellow forklift clearance zones remain unobstructed.
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div style="background: var(--lifted-cream); border: 1px solid var(--line-border); border-radius: var(--radius-lg); padding: 24px;">
+          <h3 style="font-family: var(--font-display); font-size: 22px; margin: 0 0 8px;">Pallet Staging Bay 14</h3>
+          <p style="font-size: 13px; color: var(--slate-gray); margin: 0 0 16px;">Volumetric Density: 88% Capacity</p>
+          <div style="height: 10px; background: var(--soft-bone); border-radius: var(--radius-pill); overflow: hidden; margin-bottom: 12px;">
+            <div style="width: 88%; height: 100%; background: #0d9488;"></div>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 11.5px; color: var(--charcoal);">
+            14 of 16 Pallet Footprints Occupied · 2 Available
+          </div>
+        </div>
+
+        <div style="background: var(--lifted-cream); border: 1px solid var(--line-border); border-radius: var(--radius-lg); padding: 24px;">
+          <h3 style="font-family: var(--font-display); font-size: 22px; margin: 0 0 8px;">Forklift Safety Envelope</h3>
+          <p style="font-size: 13px; color: var(--slate-gray); margin: 0 0 16px;">Aisle 03-C Clear-Zone Corridor</p>
+          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #ccfbf1; color: #0f766e; border-radius: var(--radius-pill); font-family: var(--font-mono); font-size: 11.5px; font-weight: 600;">
+            <span>✓ CLEAR-ZONE UNOBSTRUCTED</span>
+          </div>
+          <div style="font-size: 12.5px; color: var(--slate-gray); margin-top: 10px;">
+            No pallets or debris staged inside yellow boundary.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 03: Shift Handover Ledger -->
+    <section class="module-chapter">
+      <div class="chapter-index">
+        <span class="num">03</span>
+        <span>SHIFT HANDOVER · EQUIPMENT AUDIT STREAM</span>
+      </div>
+
+      <table class="custody-ledger-table">
+        <thead>
+          <tr>
+            <th>Asset Specification</th>
+            <th>Designated Location</th>
+            <th>Observed State</th>
+            <th>Shift Operator</th>
+            <th>Verification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Pneumatic Impact Wrench 1/2"</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Serial #PI-8812</span></td>
+            <td>Tool Crib Silhouette 04</td>
+            <td>In Use · Assembly Station 4</td>
+            <td>J. Miller (Shift 2)</td>
+            <td><span class="tamper-seal-badge" style="background:#fef3c7;color:#b45309;">Signed Out</span></td>
+          </tr>
+          <tr>
+            <td><strong>Laser Alignment System</strong><br><span style="font-size: 12px; color: var(--slate-gray);">Serial #LA-1090</span></td>
+            <td>Tool Crib Bay 01</td>
+            <td>Present & Calibrated</td>
+            <td>Crib Master R. Patel</td>
+            <td><span class="tamper-seal-badge">Reconciled</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <script type="module" src="/src/api/inspector.js"></script>
+</body>
+</html>

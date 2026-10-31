@@ -78,6 +78,7 @@ class Debouncer:
         # Counters worth surfacing: how much work the transient filter saved.
         self.promoted = 0
         self.discarded_transients = 0
+        self.promoted_reference: Frame | None = None
 
     @property
     def state(self) -> str:
@@ -148,4 +149,7 @@ class Debouncer:
                 self.discarded_transients += 1
                 return None
         self.promoted += 1
+        #: The "before" frame of the change just promoted, so callers can locate
+        #: *where* the scene changed (before vs. ``end_state``).
+        self.promoted_reference = reference
         return end_state

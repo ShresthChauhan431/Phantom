@@ -3,8 +3,9 @@
 #
 #   bash scripts/bootstrap.sh
 #
-# Idempotent: safe to re-run. Creates the venv, installs the package, seeds a
-# demo DB, runs the test suite, and reports which cameras this machine can see.
+# Idempotent: safe to re-run. Creates the venv, installs the package, runs the
+# test suite, and reports which cameras this machine can see. Seeds NO data:
+# memory is filled only by the live engine.
 # Everything it creates (.venv, data/, .env) is gitignored and machine-local.
 
 set -u
@@ -53,13 +54,11 @@ else
     echo "✓ .env already present (left untouched)"
 fi
 
-# ------------------------------------------------------------- 4. demo data
+# ---------------------------------------------------------- 4. data dir
+# No demo seeding: memory is filled only by the live engine (scripts/run_all.py
+# starts each session empty). scripts/seed_demo.py remains for API tests only.
 mkdir -p data
-if .venv/bin/python scripts/seed_demo.py --reset > /dev/null 2>&1; then
-    echo "✓ demo data seeded into data/phantom.db"
-else
-    echo "• demo seeding skipped (non-fatal)"
-fi
+echo "✓ data/ ready (memory starts empty; the live engine fills it)"
 
 # ----------------------------------------------------------------- 5. tests
 echo
@@ -76,21 +75,15 @@ echo "• cameras visible to this machine:"
 cat <<'EOF'
 
 ----------------------------------------------------------------------
-Ready. Useful commands:
+Ready. Run Phantom live (iPhone camera + VLM + workspace page):
 
-  Run the engine on recorded fixtures (no camera, no VLM needed):
-    PHANTOM_CAMERA_SOURCE=replay PHANTOM_VLM_PROVIDER=mock make run
-    curl localhost:8000/api/objects
-    curl "localhost:8000/api/query?q=bottle"
+    python3 scripts/run_all.py
+    # then open http://localhost:5173/pages/workspace.html
 
-  Check a camera + measure motion thresholds:
-    .venv/bin/python scripts/check_camera.py --source iphone --index <N>
-
-  Run against the iPhone (index from the camera list above):
-    PHANTOM_CAMERA_SOURCE=iphone PHANTOM_CAMERA_INDEX=<N> make run
+Needs PHANTOM_CLOUD_VLM_KEY in .env. Each session starts with empty
+memory; everything shown is what the camera saw and the VLM described.
 
 If the iPhone is NOT in the camera list above, see docs/working/dhwanit.md §E
-(Continuity Camera needs the same Apple ID on both devices; Camo over USB is
-the fallback that works regardless).
+(Continuity Camera needs the same Apple ID on both devices).
 ----------------------------------------------------------------------
 EOF

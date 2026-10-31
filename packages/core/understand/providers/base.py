@@ -14,13 +14,18 @@ response into one ``Delta``.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from datetime import datetime, timezone
 from typing import Any, Protocol, runtime_checkable
 
+from pydantic import ValidationError
+
 from core.geometry import BBox
 
 from ..schema.delta import Delta
+
+log = logging.getLogger("phantom.understand.providers")
 
 
 class ProviderError(RuntimeError):
@@ -120,3 +125,63 @@ def parse_delta_json(
     if bbox is not None:
         delta = delta.model_copy(update={"bbox": bbox})
     return delta
+
+
+def parse_inventory_json(
+    raw: str,
+    *,
+    frame_ref: str | None = None,
+    observed_at: datetime | None = None,
+) -> list[Delta]:
+    """Parse a scene-inventory reply into one ``appeared`` Delta per visible object.
+
+    The inventory prompt asks for ``{"objects": [{object, location, relations,
+    confidence, bbox}, ...]}``. Each entry becomes a Delta the loop can commit; the
+    loop, not the model, decides whether an object is new or already known.
+
+    Entries are validated one by one: a malformed entry is skipped rather than
+    discarding the whole scene, and a bad bbox is dropped rather than failing its
+    entry. Observation time always comes from capture, never from the model.
+
+    Raises:
+        ProviderError: if the reply holds no parseable JSON object at all.
+    """
+    match = _JSON_OBJECT_RE.search(raw or "")
+    if not match:
+        raise ProviderError(f"no JSON object found in inventory response: {raw!r:.200}")
+    try:
+        payload = json.loads(match.group(0))
+    except json.JSONDecodeError as exc:
+        raise ProviderError(f"inventory response was not valid JSON: {exc}") from exc
+
+    entries = payload.get("objects") if isinstance(payload, dict) else None
+    if not isinstance(entries, list):
+        raise ProviderError("inventory response has no 'objects' list")
+
+    stamp = (observed_at or datetime.now(timezone.utc)).isoformat()
+    deltas: list[Delta] = []
+    for entry in entries:
+        if not isinstance(entry, dict) or not entry.get("object"):
+            continue
+        relations = entry.get("relations")
+        try:
+            delta = Delta.model_validate(
+                {
+                    "object": str(entry["object"]),
+                    "event": "appeared",
+                    "to": entry.get("location") or None,
+                    "relations": [str(r) for r in relations] if isinstance(relations, list) else [],
+                    "confidence": entry.get("confidence", 0.0),
+                    "frame_ref": frame_ref,
+                    "observed_at": stamp,
+                }
+            )
+        except ValidationError as exc:
+            # One malformed entry (e.g. confidence "high") must not drop the scene.
+            log.debug("skipping invalid inventory entry %r: %s", entry, exc)
+            continue
+        bbox = coerce_bbox(entry.get("bbox"))
+        if bbox is not None:
+            delta = delta.model_copy(update={"bbox": bbox})
+        deltas.append(delta)
+    return deltas

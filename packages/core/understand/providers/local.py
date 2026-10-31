@@ -8,12 +8,14 @@ end-state frame to a local vision model and parses the strict-JSON reply into a
 from __future__ import annotations
 
 import base64
+from datetime import datetime
 from pathlib import Path
 
 from ..schema.delta import Delta
-from .base import ProviderError, parse_delta_json
+from .base import ProviderError, parse_delta_json, parse_inventory_json
 
 _PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "delta.txt"
+_INVENTORY_PATH = _PROMPT_PATH.with_name("inventory.txt")
 
 
 def _load_prompt() -> str:
@@ -47,8 +49,24 @@ class LocalProvider:
         return self._client
 
     def whats_changed(self, prev_state_json: str, frame_ref: str, image_bytes: bytes) -> Delta:
-        client = self._ensure_client()
         prompt = self._prompt_template.format(prev_state_json=prev_state_json)
+        return parse_delta_json(self._chat(prompt, image_bytes), frame_ref=frame_ref)
+
+    def scan_scene(
+        self,
+        known_json: str,
+        frame_ref: str,
+        image_bytes: bytes,
+        observed_at: datetime | None = None,
+    ) -> list[Delta]:
+        template = _INVENTORY_PATH.read_text(encoding="utf-8")
+        prompt = template.format(known_json=known_json)
+        return parse_inventory_json(
+            self._chat(prompt, image_bytes), frame_ref=frame_ref, observed_at=observed_at
+        )
+
+    def _chat(self, prompt: str, image_bytes: bytes) -> str:
+        client = self._ensure_client()
         image_b64 = base64.b64encode(image_bytes).decode("ascii")
         try:
             resp = client.chat(
@@ -59,5 +77,4 @@ class LocalProvider:
             )
         except Exception as exc:  # network / model errors -> uniform provider error
             raise ProviderError(f"ollama chat failed: {exc}") from exc
-        content = (resp.get("message") or {}).get("content", "")
-        return parse_delta_json(content, frame_ref=frame_ref)
+        return (resp.get("message") or {}).get("content", "")

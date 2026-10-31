@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -40,10 +41,25 @@ def _get(key: str, default: str) -> str:
     return os.environ.get(key, default)
 
 
+def _numbered_keys(base: str) -> tuple[str, ...]:
+    """Values of ``{base}2``, ``{base}_2``, ``{base}3`` … in numeric order.
+
+    Lets extra API keys be added to .env as KEY2, KEY3, … without code changes.
+    """
+    pattern = re.compile(rf"^{re.escape(base)}_?(\d+)$")
+    numbered = []
+    for name, value in os.environ.items():
+        match = pattern.match(name)
+        if match and value.strip():
+            numbered.append((int(match.group(1)), value.strip()))
+    return tuple(value for _, value in sorted(numbered))
+
+
 @dataclass(slots=True)
 class Config:
-    # Capture
-    camera_source: str = "replay"  # android | iphone | replay
+    # Capture — the phone is the default; "replay" (recorded fixture frames) must be
+    # asked for explicitly and is for offline tests only.
+    camera_source: str = "iphone"  # iphone | android | replay
     capture_interval: float = 2.0
     replay_dir: str = "tests/fixtures/frames"
     camera_index: int = 0  # device index for iphone / usb webcam-bridge
@@ -56,18 +72,29 @@ class Config:
 
     # Buffer / retention
     retention_hours: float = 168.0
-    buffer_capacity: int = 256
+    # Only settled end-state frames and scan frames are retained (the ones a
+    # screenshot can point at), not every captured frame. A raw 1080p frame is
+    # ~6MB, so this bounds the buffer to ~400MB worst case.
+    buffer_capacity: int = 64
 
-    # VLM
-    vlm_provider: str = "mock"  # local | nvidia | groq | mock
+    # VLM — the real provider is the default; "mock" must be asked for explicitly
+    # and is for offline tests only (it returns canned deltas, not observations).
+    vlm_provider: str = "groq"  # groq | nvidia | local | mock
     ollama_model: str = "qwen2.5-vl:latest"
     ollama_host: str = "http://localhost:11434"
     cloud_vlm_key: str = ""
+    # Further keys for failover (PHANTOM_CLOUD_VLM_KEY2, KEY3, …), in order.
+    extra_cloud_vlm_keys: tuple[str, ...] = ()
+    # Seconds a key sits out after a 429 when the server gives no retry-after.
+    key_cooldown_seconds: float = 60.0
     cloud_model: str = "qwen/qwen3.8-27b"
     escalate_threshold: float = 0.7
 
     # Gate / debounce tuning
     motion_threshold: float = 0.02
+    # Morphological opening (px) applied to the change mask. Removes the edge
+    # shimmer a compressed live phone stream produces on a still scene; 0 = off.
+    gate_open_ksize: int = 0
     # How long the scene must hold still before a change is considered finished.
     # This is a *duration*, because what matters physically is outlasting a human
     # pause: measured on real footage, a 0.6s window captured a hand hovering
@@ -84,8 +111,31 @@ class Config:
     change_threshold: float = 0.0
 
     # Loop
-    heartbeat_minutes: float = 7.0
+    # Real re-scan interval. Kept under the 6-minute staleness window so an object
+    # that is genuinely still visible stays fresh; one that is not goes stale.
+    heartbeat_minutes: float = 4.0
+    # How long the camera may deliver nothing before the loop reconnects it.
+    stall_seconds: float = 15.0
+    # Scene-scan entries below this confidence are discarded as guesses.
+    scan_min_confidence: float = 0.5
     db_path: str = "data/phantom.db"
+
+    @property
+    def cloud_vlm_keys(self) -> list[str]:
+        """Every configured cloud key, in order, de-duplicated.
+
+        Read from ``PHANTOM_CLOUD_VLM_KEY`` plus ``PHANTOM_CLOUD_VLM_KEY2``,
+        ``…KEY3`` …; any of them may also hold a comma-separated list. The provider
+        uses the first and fails over to the next when one runs out of quota.
+        """
+        raw = [self.cloud_vlm_key, *self.extra_cloud_vlm_keys]
+        keys: list[str] = []
+        for value in raw:
+            for part in (value or "").split(","):
+                part = part.strip()
+                if part and part not in keys:
+                    keys.append(part)
+        return keys
 
     @property
     def retention_seconds(self) -> float:
@@ -109,7 +159,7 @@ class Config:
         if load_file:
             load_dotenv()
         return cls(
-            camera_source=_get("PHANTOM_CAMERA_SOURCE", "replay"),
+            camera_source=_get("PHANTOM_CAMERA_SOURCE", "iphone"),
             capture_interval=float(_get("PHANTOM_CAPTURE_INTERVAL", "2")),
             replay_dir=_get("PHANTOM_REPLAY_DIR", "tests/fixtures/frames"),
             camera_index=int(_get("PHANTOM_CAMERA_INDEX", "0")),
@@ -117,17 +167,22 @@ class Config:
             iphone_capture=_get("PHANTOM_IPHONE_CAPTURE", "bridge"),
             iphone_unique_id=_get("PHANTOM_IPHONE_UNIQUE_ID", ""),
             retention_hours=float(_get("PHANTOM_RETENTION_HOURS", "168")),
-            buffer_capacity=int(_get("PHANTOM_BUFFER_CAPACITY", "256")),
-            vlm_provider=_get("PHANTOM_VLM_PROVIDER", "mock"),
+            buffer_capacity=int(_get("PHANTOM_BUFFER_CAPACITY", "64")),
+            vlm_provider=_get("PHANTOM_VLM_PROVIDER", "groq"),
             ollama_model=_get("OLLAMA_MODEL", "qwen2.5-vl:latest"),
             ollama_host=_get("OLLAMA_HOST", "http://localhost:11434"),
             cloud_vlm_key=_get("PHANTOM_CLOUD_VLM_KEY", ""),
+            extra_cloud_vlm_keys=_numbered_keys("PHANTOM_CLOUD_VLM_KEY"),
+            key_cooldown_seconds=float(_get("PHANTOM_KEY_COOLDOWN_SECONDS", "60")),
             cloud_model=_get("PHANTOM_CLOUD_MODEL", "qwen/qwen3.8-27b"),
             escalate_threshold=float(_get("PHANTOM_ESCALATE_THRESHOLD", "0.7")),
             motion_threshold=float(_get("PHANTOM_MOTION_THRESHOLD", "0.02")),
+            gate_open_ksize=int(_get("PHANTOM_GATE_OPEN_KSIZE", "0")),
             settle_seconds=float(_get("PHANTOM_SETTLE_SECONDS", "2")),
             settle_frames=int(_get("PHANTOM_SETTLE_FRAMES", "0")),
             change_threshold=float(_get("PHANTOM_CHANGE_THRESHOLD", "0")),
-            heartbeat_minutes=float(_get("PHANTOM_HEARTBEAT_MINUTES", "7")),
+            heartbeat_minutes=float(_get("PHANTOM_HEARTBEAT_MINUTES", "4")),
+            stall_seconds=float(_get("PHANTOM_STALL_SECONDS", "15")),
+            scan_min_confidence=float(_get("PHANTOM_SCAN_MIN_CONFIDENCE", "0.5")),
             db_path=_get("PHANTOM_DB_PATH", "data/phantom.db"),
         )

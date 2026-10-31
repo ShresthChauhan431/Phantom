@@ -1,25 +1,17 @@
 {
   "name": "phantom-dashboard",
-  "version": "0.1.0",
-  "type": "module",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Phantom / DISHA spatial memory experience — static multi-page UI",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "python3 serve.py --port 5173",
+    "start": "python3 serve.py --port 5173"
   },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "@splinetool/runtime": "^2.0.75",
-    "three": "^0.160.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
-    "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.0.8",
-    "tailwindcss": "^3.4.0",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32"
-  }
+  "keywords": [
+    "phantom",
+    "disha",
+    "spatial-memory",
+    "threejs"
+  ],
+  "license": "MIT"
 }
