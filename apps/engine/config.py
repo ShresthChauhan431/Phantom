@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,6 +39,20 @@ def load_dotenv(path: str | Path | None = None) -> None:
 
 def _get(key: str, default: str) -> str:
     return os.environ.get(key, default)
+
+
+def _numbered_keys(base: str) -> tuple[str, ...]:
+    """Values of ``{base}2``, ``{base}_2``, ``{base}3`` … in numeric order.
+
+    Lets extra API keys be added to .env as KEY2, KEY3, … without code changes.
+    """
+    pattern = re.compile(rf"^{re.escape(base)}_?(\d+)$")
+    numbered = []
+    for name, value in os.environ.items():
+        match = pattern.match(name)
+        if match and value.strip():
+            numbered.append((int(match.group(1)), value.strip()))
+    return tuple(value for _, value in sorted(numbered))
 
 
 @dataclass(slots=True)
@@ -68,6 +83,10 @@ class Config:
     ollama_model: str = "qwen2.5-vl:latest"
     ollama_host: str = "http://localhost:11434"
     cloud_vlm_key: str = ""
+    # Further keys for failover (PHANTOM_CLOUD_VLM_KEY2, KEY3, …), in order.
+    extra_cloud_vlm_keys: tuple[str, ...] = ()
+    # Seconds a key sits out after a 429 when the server gives no retry-after.
+    key_cooldown_seconds: float = 60.0
     cloud_model: str = "qwen/qwen3.8-27b"
     escalate_threshold: float = 0.7
 
@@ -100,6 +119,23 @@ class Config:
     # Scene-scan entries below this confidence are discarded as guesses.
     scan_min_confidence: float = 0.5
     db_path: str = "data/phantom.db"
+
+    @property
+    def cloud_vlm_keys(self) -> list[str]:
+        """Every configured cloud key, in order, de-duplicated.
+
+        Read from ``PHANTOM_CLOUD_VLM_KEY`` plus ``PHANTOM_CLOUD_VLM_KEY2``,
+        ``…KEY3`` …; any of them may also hold a comma-separated list. The provider
+        uses the first and fails over to the next when one runs out of quota.
+        """
+        raw = [self.cloud_vlm_key, *self.extra_cloud_vlm_keys]
+        keys: list[str] = []
+        for value in raw:
+            for part in (value or "").split(","):
+                part = part.strip()
+                if part and part not in keys:
+                    keys.append(part)
+        return keys
 
     @property
     def retention_seconds(self) -> float:
@@ -136,6 +172,8 @@ class Config:
             ollama_model=_get("OLLAMA_MODEL", "qwen2.5-vl:latest"),
             ollama_host=_get("OLLAMA_HOST", "http://localhost:11434"),
             cloud_vlm_key=_get("PHANTOM_CLOUD_VLM_KEY", ""),
+            extra_cloud_vlm_keys=_numbered_keys("PHANTOM_CLOUD_VLM_KEY"),
+            key_cooldown_seconds=float(_get("PHANTOM_KEY_COOLDOWN_SECONDS", "60")),
             cloud_model=_get("PHANTOM_CLOUD_MODEL", "qwen/qwen3.8-27b"),
             escalate_threshold=float(_get("PHANTOM_ESCALATE_THRESHOLD", "0.7")),
             motion_threshold=float(_get("PHANTOM_MOTION_THRESHOLD", "0.02")),

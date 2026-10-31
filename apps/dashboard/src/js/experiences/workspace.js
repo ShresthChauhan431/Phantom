@@ -418,6 +418,16 @@
       ['Triggers committed', String(t.triggers?.count ?? 0)],
     ];
     if (vlm.last_error) rows.push(['Last VLM error', `<span class="is-bad">${esc(vlm.last_error)}</span>`]);
+    const keyPool = vlm.keys;
+    if (keyPool && keyPool.count) {
+      const free = keyPool.keys.filter((k) => k.available).length;
+      rows.push(['API keys', `${free}/${keyPool.count} available · active ${esc(keyPool.active)}` +
+        (keyPool.switches ? ` · ${keyPool.switches} switch${keyPool.switches === 1 ? '' : 'es'}` : '')]);
+    }
+    const loopInfo = t.loop || {};
+    if (loopInfo.count) {
+      rows.push(['Loop restarts', `${loopInfo.count} · last: ${esc(loopInfo.last_reason || '—')}`]);
+    }
     if (dom.engineTelemetryList) {
       dom.engineTelemetryList.innerHTML = rows
         .map(([k, v]) => `<div class="ws-tel-row"><span>${k}</span><span>${v}</span></div>`)
@@ -438,6 +448,13 @@
         ['VLM provider', esc(vlm.provider)],
         ['VLM model', esc(vlm.model)],
         ['VLM calls / failures', `${vlm.calls ?? 0} / ${vlm.failures ?? 0}`],
+        ...((vlm.keys && vlm.keys.keys) || []).map((k) => [
+          `API ${esc(k.label)}${k.active ? ' — active' : ''}`,
+          `${k.available ? '<span class="is-good">available</span>' : `<span class="is-bad">cooling ${Math.ceil(k.cooling_s)}s</span>`}` +
+            ` · ${k.calls} calls · ${k.failures} quota/limit hits` +
+            (k.last_error ? ` · ${esc(k.last_error)}` : ''),
+        ]),
+        ['Perception loop restarts', `${t.loop?.count ?? 0}${t.loop?.last_reason ? ` · last: ${esc(t.loop.last_reason)}` : ''}`],
         ['Scene scans', `${scans.count ?? 0}${scans.last_at ? ` · last ${timeAgo(scans.last_at)}` : ''}`],
         ['Objects in memory', String(t.memory?.objects ?? '—')],
       ];

@@ -103,9 +103,10 @@ def _build_cloud(config: Config, name: str) -> CloudProvider:
     base_url = KNOWN_BASE_URLS.get(name)
     return CloudProvider(
         model=config.cloud_model,
-        api_key=config.cloud_vlm_key,
+        api_key=config.cloud_vlm_keys,  # all keys; fails over on quota
         base_url=base_url,
         name=name,
+        default_cooldown=config.key_cooldown_seconds,
     )
 
 
@@ -124,7 +125,7 @@ def build_understand_service(config: Config) -> UnderstandService:
         primary = MockProvider(_MOCK_SCRIPT, cycle=True)
     elif provider_name == "local":
         primary = LocalProvider(model=config.ollama_model, host=config.ollama_host)
-        if config.cloud_vlm_key:
+        if config.cloud_vlm_keys:
             cloud = _build_cloud(config, "nvidia")
     elif provider_name in ("nvidia", "groq"):
         primary = _build_cloud(config, provider_name)
@@ -201,6 +202,9 @@ class EngineLoop:
             settle_seconds=config.settle_seconds,
             capture_interval=config.capture_interval,
         )
+        keys = getattr(provider, "keys", None)
+        if keys is not None and hasattr(keys, "status"):
+            self.monitor.attach_keys(keys.status)
         self._last_heartbeat = time.monotonic()
         self._last_frame_mono: float | None = None
 
@@ -362,6 +366,49 @@ class EngineLoop:
             self.monitor.set_state("reconnecting", f"camera unavailable: {exc}")
             time.sleep(5.0)
 
+    def run_forever(
+        self,
+        stop_event: threading.Event,
+        *,
+        max_backoff: float = 30.0,
+    ) -> None:
+        """Keep the perception loop running until ``stop_event`` is set.
+
+        Scanning must only end when the user stops the engine. ``run()`` can still
+        end on its own — the phone may be unreachable at startup, or an unexpected
+        error may escape the frame loop — so this restarts it after a short,
+        growing pause (2s, 4s, … capped at ``max_backoff``) and records each
+        restart in telemetry. A run that lasted a while resets the backoff.
+        """
+        backoff = 2.0
+        restarts = 0
+        # Let a provider waiting out a quota window notice shutdown at once.
+        for p in (self.understand.provider, getattr(self.understand, "cloud_provider", None)):
+            if p is not None and hasattr(p, "stop_event"):
+                p.stop_event = stop_event
+        while not stop_event.is_set():
+            started = time.monotonic()
+            try:
+                self.run(stop_event=stop_event)
+                if stop_event.is_set():
+                    break
+                reason = "perception loop ended unexpectedly"
+            except Exception as exc:
+                reason = f"{type(exc).__name__}: {exc}"
+                log.exception("perception loop stopped; restarting")
+            if time.monotonic() - started > 120:
+                backoff = 2.0  # it was healthy for a while: restart quickly
+            restarts += 1
+            self.monitor.restarted(restarts, reason)
+            self.monitor.set_state("reconnecting", f"restarting in {backoff:.0f}s — {reason}")
+            log.warning("restarting perception loop in %.0fs (%s)", backoff, reason)
+            if stop_event.wait(backoff):
+                break
+            backoff = min(backoff * 2, max_backoff)
+            # A fresh start must re-scan the scene: memory may be stale after a gap.
+            self._last_heartbeat = time.monotonic()
+        self.monitor.set_state("stopped")
+
     def run(
         self,
         *,
@@ -422,7 +469,12 @@ class EngineLoop:
                     committed.append(delta)
                 committed.extend(self.maybe_heartbeat(frame))
                 if not is_finite:
-                    time.sleep(self.config.capture_interval)
+                    # Interruptible, so closing the engine never waits out a frame.
+                    if stop_event is not None:
+                        if stop_event.wait(self.config.capture_interval):
+                            break
+                    else:
+                        time.sleep(self.config.capture_interval)
         finally:
             self.monitor.set_state("stopped")
             self.camera.close()

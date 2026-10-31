@@ -43,6 +43,10 @@ class EngineMonitor:
 
         self.state = "starting"  # starting | scanning | watching | reconnecting | error | stopped
         self.error: str | None = None
+        self.loop_restarts = 0
+        self.last_restart_reason: str | None = None
+        self.last_restart_at: str | None = None
+        self._key_status = None
 
         self.camera: dict[str, Any] = {
             "source": camera_source,
@@ -92,6 +96,17 @@ class EngineMonitor:
         with self._lock:
             self.state = state
             self.error = error
+
+    def restarted(self, count: int, reason: str) -> None:
+        """Record that the supervisor restarted the loop (it never stops by itself)."""
+        with self._lock:
+            self.loop_restarts = count
+            self.last_restart_reason = reason[:300]
+            self.last_restart_at = datetime.now(timezone.utc).isoformat()
+
+    def attach_keys(self, status_fn) -> None:
+        """Callable returning the provider's key-pool status, shown in telemetry."""
+        self._key_status = status_fn
 
     def frame(self, *, width: int, height: int, device: str | None) -> None:
         with self._lock:
@@ -159,6 +174,19 @@ class EngineMonitor:
             )
             # "Streaming" is a measured fact: a frame arrived within a few intervals.
             streaming = age is not None and age < max(3 * self._capture_interval, 5.0)
+            vlm = dict(self.vlm)
+            restarts = {
+                "count": self.loop_restarts,
+                "last_reason": self.last_restart_reason,
+                "last_at": self.last_restart_at,
+            }
+        # Read outside our lock: the key pool has its own.
+        if self._key_status is not None:
+            try:
+                vlm["keys"] = self._key_status()
+            except Exception:  # noqa: BLE001 - telemetry must never break the API
+                vlm["keys"] = None
+        with self._lock:
             return {
                 "session": self.session,
                 "state": self.state,
@@ -172,7 +200,8 @@ class EngineMonitor:
                     "capture_interval_s": self._capture_interval,
                 },
                 "gate": dict(self.gate),
-                "vlm": dict(self.vlm),
+                "vlm": vlm,
+                "loop": restarts,
                 "scans": dict(self.scans),
                 "triggers": {"count": self._seq},
                 "memory": {"objects": objects_in_memory},

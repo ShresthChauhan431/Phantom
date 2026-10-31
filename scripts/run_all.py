@@ -233,10 +233,15 @@ def wait_for_engine(api: str, timeout: float) -> dict | None:
                     if status.get("scans", {}).get("count", 0) >= 1:
                         ok(f"VLM answered: {vlm.get('provider')} / {vlm.get('model')} "
                            f"in {vlm.get('last_latency_ms')}ms")
+                        keys = vlm.get("keys") or {}
+                        if keys:
+                            ok(f"VLM keys in rotation: {keys.get('count')} · "
+                               f"active {keys.get('active')}")
                         return status
                     if vlm.get("failures"):
-                        fail(f"VLM call failed: {vlm.get('last_error')}")
-                        return status
+                        # Failover handles quota; report it, keep waiting for a scan.
+                        print(f"{YELLOW}!{RESET} VLM call failed, engine retrying: "
+                              f"{vlm.get('last_error')}", flush=True)
         time.sleep(0.5)
     if last:
         fail(f"timed out in phase '{phase}' — engine state: {last.get('state')} "
@@ -279,11 +284,17 @@ def main() -> int:
         fail(f"PHANTOM_VLM_PROVIDER={vlm!r} is not a real model. "
              f"Set it to one of {LIVE_VLMS} in .env.")
         return 1
-    if vlm in ("groq", "nvidia") and not (
-        os.environ.get("PHANTOM_CLOUD_VLM_KEY") or dotenv.get("PHANTOM_CLOUD_VLM_KEY")
-    ):
-        fail(f"{vlm} needs an API key: set PHANTOM_CLOUD_VLM_KEY in .env")
-        return 1
+    if vlm in ("groq", "nvidia"):
+        key_names = sorted(
+            k for k in {**dotenv, **os.environ}
+            if (k == "PHANTOM_CLOUD_VLM_KEY" or k.startswith("PHANTOM_CLOUD_VLM_KEY"))
+            and ({**dotenv, **os.environ}[k] or "").strip()
+        )
+        if not key_names:
+            fail(f"{vlm} needs an API key: set PHANTOM_CLOUD_VLM_KEY in .env")
+            return 1
+        ok(f"VLM keys: {len(key_names)} ({', '.join(key_names)}) — "
+           f"switches automatically when one runs out of quota")
 
     conflicts = False
     for label, port in (("engine", args.engine_port), ("dashboard", args.web_port)):
@@ -327,7 +338,11 @@ def main() -> int:
     api = f"http://localhost:{args.engine_port}/api"
     # First start compiles the Swift capture helper and waits out auto-exposure.
     status = wait_for_engine(api, timeout=180)
-    if status is None or status.get("vlm", {}).get("failures") and not status.get("scans", {}).get("count"):
+    if status is None and not args.check and engine_alive():
+        # Not verified yet (e.g. every key momentarily over quota, or the phone
+        # still connecting). The engine retries on its own, so keep running.
+        print(f"{YELLOW}!{RESET} engine not verified yet — continuing; it keeps retrying")
+    elif status is None:
         shutdown()
         return 1
 
@@ -368,14 +383,32 @@ def main() -> int:
         shutdown()
         return 0
 
-    print(f"{DIM}Ctrl-C to stop.{RESET}\n")
+    print(f"{DIM}Ctrl-C to stop. Phantom keeps scanning until you do.{RESET}\n")
+    web_argv = [
+        python_exe(), str(ROOT / "apps" / "dashboard" / "serve.py"),
+        "--port", str(args.web_port),
+        "--engine", f"http://localhost:{args.engine_port}",
+    ]
+    restarts = {"engine": 0, "web": 0}
     try:
         while not shutting_down.is_set():
-            for name, proc in processes:
-                if proc.poll() is not None:
-                    fail(f"{name} exited ({proc.returncode}) — shutting down")
-                    shutdown()
-                    return 1
+            for i, (name, proc) in enumerate(list(processes)):
+                if proc.poll() is None or shutting_down.is_set():
+                    continue
+                # Only Ctrl-C stops Phantom. Anything else that ends a process is
+                # recovered: restart it, keeping the same memory (no fresh DB).
+                restarts[name] += 1
+                fail(f"{name} exited ({proc.returncode}) — restarting "
+                     f"(restart #{restarts[name]})")
+                time.sleep(min(2 * restarts[name], 15))
+                if shutting_down.is_set():
+                    break
+                processes.pop(i)
+                if name == "engine":
+                    spawn("engine", BLUE, [python_exe(), "-m", "apps.engine.main"], env)
+                else:
+                    spawn("web", YELLOW, web_argv, env)
+                break
             time.sleep(0.5)
     except KeyboardInterrupt:
         shutdown()

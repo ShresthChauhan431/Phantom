@@ -32,16 +32,17 @@ from .loop import EngineLoop, build_loop
 log = logging.getLogger("phantom.engine")
 
 
-def _run_loop(loop: EngineLoop) -> None:
-    """Run the perception loop, logging (not crashing the process) on failure."""
+def _run_loop(loop: EngineLoop, stop_event: threading.Event) -> None:
+    """Keep the perception loop alive until the engine is closed.
+
+    ``run_forever`` restarts the loop whenever it ends on its own (camera not ready,
+    unexpected error), so scanning only stops when the user stops the engine.
+    """
     try:
-        loop.run()
-    except NotImplementedError as exc:
-        loop.monitor.set_state("error", f"capture source not available: {exc}")
-        log.warning("capture source not available, loop stopped: %s", exc)
-    except Exception as exc:  # keep the API alive even if the loop dies
-        loop.monitor.set_state("error", f"perception loop crashed: {exc}")
-        log.exception("perception loop crashed")
+        loop.run_forever(stop_event)
+    except Exception as exc:
+        loop.monitor.set_state("error", f"perception supervisor crashed: {exc}")
+        log.exception("perception supervisor crashed")
 
 
 def mount_engine_routes(app: FastAPI, store: MemoryStore, loop: EngineLoop | None) -> None:
@@ -86,18 +87,31 @@ def main() -> None:
     # from the loop's live RAM buffer. PHANTOM_DISABLE_LOOP=1 serves the API only.
     loop: EngineLoop | None = None
     frame_source = None
+    stop_event = threading.Event()
+    loop_thread: threading.Thread | None = None
     if os.environ.get("PHANTOM_DISABLE_LOOP", "").lower() not in ("1", "true", "yes"):
         loop = build_loop(store, config)
         frame_source = loop.get_frame_png  # serves reveal frames from the RAM buffer
-        threading.Thread(
-            target=_run_loop, args=(loop,), name="phantom-loop", daemon=True
-        ).start()
+        keys = getattr(loop.understand.provider, "keys", None)
+        if keys is not None:
+            print(f"🔑 VLM keys: {len(keys)} (automatic failover on quota / rate limit)")
+        loop_thread = threading.Thread(
+            target=_run_loop, args=(loop, stop_event), name="phantom-loop", daemon=True
+        )
+        loop_thread.start()
     else:
         log.info("PHANTOM_DISABLE_LOOP set — serving API only, perception loop not started")
 
     app = create_api(store, frame_source=frame_source)
     mount_engine_routes(app, store, loop)
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    try:
+        # uvicorn handles Ctrl-C / SIGTERM; returning means the user closed it.
+        uvicorn.run(app, host="0.0.0.0", port=port)
+    finally:
+        stop_event.set()
+        if loop_thread is not None:
+            loop_thread.join(timeout=10)
+        log.info("engine closed")
 
 
 if __name__ == "__main__":
